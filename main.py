@@ -12,25 +12,27 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.callbacks import LearningRateMonitor
 from pytorch_lightning.loggers import TensorBoardLogger
-import timm
+# import timm
 import torchvision
 from src.dataset import FaceDataset
 from pytorch_lightning.loggers import WandbLogger
 import wandb
 
 class FaceSynthetics(pl.LightningModule):
-    def __init__(self, backbone, lr, wd, beta1 = 0.9, beta2 = 0.999):
+    def __init__(self, backbone, lr, wd, beta1 = 0.9, beta2 = 0.999, momentum = 0.9):
         super().__init__()
         self.save_hyperparameters()
-        backbone = timm.create_model(backbone, num_classes=68*2)
-        # backbone = torchvision.models.shufflenet_v2_x1_0(num_classes=68*2)
+        # backbone = timm.create_model(backbone, num_classes=68*2)
+        backbone = torchvision.models.mobilenet_v2(num_classes=68*2)
         self.backbone = backbone
-        self.loss = nn.MSELoss(reduction='mean')
+        #self.loss = nn.MSELoss(reduction='mean')
+        self.loss = nn.L1Loss(reduction='mean')
         self.hard_mining = False
         self.lr = lr
         self.wd = wd
         self.beta1 = beta1
         self.beta2 = beta2
+        self.momentum = momentum
     def forward(self, x):
         # use forward for inference/predictions
         y = self.backbone(x)
@@ -66,8 +68,10 @@ class FaceSynthetics(pl.LightningModule):
 
     def configure_optimizers(self):
         
-        opt = torch.optim.Adam(self.parameters(), lr = self.lr, betas = (self.beta1, self.beta2), weight_decay = self.wd)
-        
+        # opt = torch.optim.Adam(self.parameters(), lr = self.lr, betas = (self.beta1, self.beta2), weight_decay = self.wd)
+
+        opt = torch.optim.SGD(self.parameters(), lr = self.lr, momentum=self.momentum, weight_decay = self.wd)
+
         def lr_step_func(epoch):
             return 0.1 ** len([m for m in [15, 25, 28] if m <= epoch])
         scheduler = torch.optim.lr_scheduler.LambdaLR(
@@ -105,7 +109,7 @@ def main(hparams):
         val_loader = DataLoader(val_set, batch_size=hparams.bs, shuffle=False)
 
         # --- Model instantiation ---
-        model = FaceSynthetics(backbone=hparams.backbone, lr = hparams.lr, wd = hparams.wd, beta1 = hparams.beta1, beta2 = hparams.beta2)
+        model = FaceSynthetics(backbone=hparams.backbone, lr = hparams.lr, wd = hparams.wd, beta1 = hparams.beta1, beta2 = hparams.beta2, momentum = hparams.momentum)
         # --- Fit model to trainer ---
         checkpoint_callback = ModelCheckpoint(
             monitor='val_loss',
@@ -126,6 +130,7 @@ def main(hparams):
             check_val_every_n_epoch=1,
             progress_bar_refresh_rate=2,
             max_epochs = hparams.epoch,
+            profiler="simple",
         )
         trainer.fit(model, train_loader, val_loader)
 
@@ -155,11 +160,12 @@ if __name__ == "__main__":
     parser.add_argument('--backbone', default='mobilenetv3_small_075', type=str)
 
     # --- Training Hyperparameters ---
-    parser.add_argument('--epoch', help='Training epochs.', default=150, type=int)
+    parser.add_argument('--epoch', help='Training epochs.', default=50, type=int)
     parser.add_argument('--lr', help='Learning rate.', default=1e-2, type=float)
     parser.add_argument('--wd', help='Weight decay of optimizer', default=1e-5, type=float)
     parser.add_argument('--beta1', help='beta1 of Adam', default=0.9, type=float)
     parser.add_argument('--beta2', help='beta2 of Adam', default=0.999, type=float)
+    parser.add_argument('--momentum', help='momentum', default=0.9, type=float)
     parser.add_argument('--bs', help='Batch size.', default=50, type=int)
     parser.add_argument('--seed', help='Random seed.', default=7, type=int)
     # --- GPU/CPU Arguments ---
