@@ -12,6 +12,8 @@ import cv2
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 from .augs import RectangleBorderAugmentation
+from PIL import Image
+
 
 class FaceDataset(Dataset):
     def __init__(self, root_dir, is_train):
@@ -78,7 +80,9 @@ class FaceDataset(Dataset):
         x = self.X[index]
         y = self.Y[index]
         image_path = os.path.join(self.root_dir, x)
-        img = cv2.imread(image_path)[:,:,::-1]
+        img = cv2.imread(image_path)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        # img = np.array(Image.open(image_path))
         label = y
         if self.transform is not None:
             t = self.transform(image=img, keypoints=label)
