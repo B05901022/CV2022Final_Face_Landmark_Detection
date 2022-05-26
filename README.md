@@ -9,3 +9,12 @@
         - Setting for training or testing
 - Todo:
     - Test part in main.py  
+
+## 05/26 -- update by YS
+- [Reference](https://github.com/deepinsight/insightface/tree/master/alignment/synthetics/datasets)
+    - In src folder
+        - dataset.py : Reorder the Augmentation. Do resize first.
+    - main.py
+        - Replace Tensorboardlogger with wandb
+- Todo:
+    - Test part in main.py  

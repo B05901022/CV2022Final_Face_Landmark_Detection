@@ -23,7 +23,9 @@ class FaceDataset(Dataset):
         self.num_kps = 68
         
 
-        transform_list = []
+        transform_list = [
+            A.geometric.resize.Resize(self.input_size, self.input_size, interpolation=cv2.INTER_LINEAR, always_apply=True)
+        ]
         if is_train:
             transform_list += \
                 [
@@ -41,8 +43,7 @@ class FaceDataset(Dataset):
                 ]
         transform_list += \
             [
-                A.geometric.resize.Resize(self.input_size, self.input_size, interpolation=cv2.INTER_LINEAR, always_apply=True),
-                A.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
+                A.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5], always_apply = True),
                 ToTensorV2(),
             ]
         self.transform = A.ReplayCompose(
