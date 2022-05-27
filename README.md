@@ -18,3 +18,10 @@
         - Replace Tensorboardlogger with wandb
 - Todo:
     - Test part in main.py  
+
+## 05/27 -- update by YS
+- [Reference](https://github.com/deepinsight/insightface/tree/master/alignment/synthetics/datasets)
+    - In src folder
+        - dataset.py : When testing, return original image.
+    - main.py
+        - Finish testing part

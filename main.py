@@ -17,6 +17,15 @@ import torchvision
 from src.dataset import FaceDataset
 from pytorch_lightning.loggers import WandbLogger
 import wandb
+import numpy as np
+import copy
+import cv2
+
+def plot_keypoints_2(img, keypoints):
+    img = copy.deepcopy(img)
+    for y, x in keypoints:
+        cv2.circle(img, (y, x), 5, (0, 0, 255), -1)
+    return img
 
 class FaceSynthetics(pl.LightningModule):
     def __init__(self, backbone, lr, wd, beta1 = 0.9, beta2 = 0.999, momentum = 0.9):
@@ -55,16 +64,116 @@ class FaceSynthetics(pl.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        x, y = batch
+        img_o, x, y = batch
         y_hat = self.backbone(x)
+        
+        y = y.view(-1,68,2)
+        y_hat = y_hat.view(-1,68,2)
+        
+        kp_GT = y.cpu().detach().numpy()
+        kp_p = y_hat.cpu().detach().numpy()
+        
+        dis = kp_GT - kp_p
+        dis = np.sqrt(np.sum(np.power(dis, 2), 2))
+        dis = np.mean(dis)
+        NME = dis / 2 * 100
+        
+        # calculate loss
         loss = self.loss(y_hat, y)
         self.log('val_loss', loss, on_step=True)
+        self.log('val_NME %', NME, on_step=True)
+        
+        
+        # plot result on wandb
+        if (batch_idx == 0):
+            img_o = img_o.cpu().detach().numpy()[0]
+            img = np.array(img_o).astype(np.uint8)
+            img = cv2.resize(img, dsize=(256, 256))
+            
+            # keypoint transform
+            kp_GT = y.cpu().detach().numpy()[0]
+            kp_GT = (kp_GT + 1) / 2 * 256
+            kp_GT = np.array(kp_GT).astype(np.int)
+            GT = plot_keypoints_2(img, kp_GT)
+
+            kp_p = y_hat.cpu().detach().numpy()[0]
+            kp_p = (kp_p + 1) / 2 * 256
+            kp_p = np.array(kp_p).astype(np.int)
+            predict = plot_keypoints_2(img, kp_p)
+            images = wandb.Image(GT, caption="GT")
+            wandb.log({"GT": images})
+            images = wandb.Image(predict, caption="predict")
+            wandb.log({"predict": images})
 
     def test_step(self, batch, batch_idx):
-        x, y = batch
+        img_o, x, y = batch
         y_hat = self.backbone(x)
-        loss = self.loss(y_hat, y)
-        self.log('test_loss', loss)
+        
+        img_o = img_o.cpu().detach().numpy()
+        
+        y = y.view(-1,68,2)
+        kp_GT = y.cpu().detach().numpy()
+        kp_GT = (kp_GT + 1) / 2 * 256
+        kp_GT = np.array(kp_GT).astype(np.int)
+        
+        y_hat = y_hat.view(-1,68,2)
+        kp_p = y_hat.cpu().detach().numpy()
+        kp_p = (kp_p + 1) / 2 * 256
+        kp_p = np.array(kp_p).astype(np.int)
+        
+        imgs_gt, imgs_p = [], []
+        for i in range(img_o.shape[0]):
+            img = np.array(img_o[i]).astype(np.uint8)
+            img = cv2.resize(img, dsize=(256, 256))
+            kp1 = kp_GT[i]
+            kp2 = kp_p[i]
+            
+            GT = plot_keypoints_2(img, kp1)
+            predict = plot_keypoints_2(img, kp2)
+            imgs_gt.append(GT)
+            imgs_p.append(predict)
+        
+        # NME with normalized keypoint
+        kp_GT = y.cpu().detach().numpy()
+        kp_p = y_hat.cpu().detach().numpy()
+        
+        dis = kp_GT - kp_p
+        dis = np.sqrt(np.sum(np.power(dis, 2), 2))
+        dis = np.mean(dis, axis = 1)
+        NME_list = dis / 2 * 100
+
+        result = {
+            'NME_list' : NME_list,
+            'imgs_gt' : imgs_gt,
+            'imgs_p' : imgs_p
+        }
+        
+        return result
+    
+    def test_epoch_end(self, test_out):
+
+        imgs_gt = []
+        imgs_p = []
+        NME_list = []
+        for result in test_out:
+            NME_list.append(result['NME_list'])
+            imgs_gt.append(result['imgs_gt'])
+            imgs_p.append(result['imgs_p'])
+            
+        NME_list = np.concatenate(NME_list, axis=0)
+        epoch_NME = np.mean(NME_list)
+        self.log('test_NME(%)', epoch_NME, on_epoch=True)
+
+        imgs_gt = np.concatenate(imgs_gt, axis=0)
+        imgs_p = np.concatenate(imgs_p, axis=0)
+        
+        for i in range(imgs_gt.shape[0]):
+            images = wandb.Image(imgs_gt[i], caption="test_GT")
+            wandb.log({"GT_test": [images]})
+            images = wandb.Image(imgs_p[i], caption="test_predict")
+            wandb.log({"predict_test": [images]})
+            if i > 10:
+                break
 
     def configure_optimizers(self):
         
@@ -90,7 +199,7 @@ def main(hparams):
     # fixed_seed(hparams.seed)
     pl.seed_everything(hparams.seed)
     # -- Logger instantiation ---
-    logger = WandbLogger(project="CV_final", name = hparams.exp_name)
+    logger = WandbLogger(project="cv_final~~~", name = hparams.exp_name, entity = 'cv_final')
     #logger = TensorBoardLogger(hparams.log_path)
     # --- Trainer instantiation ---
 
@@ -139,8 +248,18 @@ def main(hparams):
         Path(hparams.log_path).mkdir(parents=True, exist_ok=True)
 
         # --- Load model from checkpoint ---
-
+        model = FaceSynthetics.load_from_checkpoint(hparams.ckpt_path)
         # --- Fit testing ---
+        test_path = osp.join(hparams.dataset_path, 'aflw_val')
+        test_set = FaceDataset(root_dir=test_path, is_train=False)
+        test_loader = DataLoader(test_set, batch_size=hparams.bs, shuffle=False)
+
+        trainer = pl.Trainer(
+            devices = [hparams.gpu],
+            accelerator="gpu",
+            logger = logger,
+        )
+        trainer.test(model, dataloaders=test_loader)
 
 
 if __name__ == "__main__":

@@ -13,7 +13,7 @@ import albumentations as A
 from albumentations.pytorch import ToTensorV2
 from .augs import RectangleBorderAugmentation
 from PIL import Image
-
+import copy
 
 class FaceDataset(Dataset):
     def __init__(self, root_dir, is_train):
@@ -23,8 +23,8 @@ class FaceDataset(Dataset):
         self.is_train = is_train
         self.input_size = 256
         self.num_kps = 68
+        self.is_train = is_train
         
-
         transform_list = [
             A.geometric.resize.Resize(self.input_size, self.input_size, interpolation=cv2.INTER_LINEAR, always_apply=True)
         ]
@@ -83,6 +83,10 @@ class FaceDataset(Dataset):
         img = cv2.imread(image_path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         # img = np.array(Image.open(image_path))
+
+        if not(self.is_train):
+            img_o = copy.deepcopy(img)
+
         label = y
         if self.transform is not None:
             t = self.transform(image=img, keypoints=label)
@@ -103,7 +107,9 @@ class FaceDataset(Dataset):
             label -= 1.0 # to -1 ~ 1
             label = label.flatten()
             label = torch.tensor(label, dtype=torch.float32)
-        return img, label
-
+        if self.is_train:
+            return img, label
+        else:
+            return img_o, img, label, 
     def __len__(self):
         return len(self.X)
