@@ -16,7 +16,7 @@ from PIL import Image
 import copy
 
 class FaceDataset(Dataset):
-    def __init__(self, root_dir, is_train):
+    def __init__(self, root_dir, is_train, is_coord_enhance = False):
         super(FaceDataset, self).__init__()
 
         #self.local_rank = local_rank
@@ -24,7 +24,7 @@ class FaceDataset(Dataset):
         self.input_size = 256
         self.num_kps = 68
         self.is_train = is_train
-        
+        self.is_coord_enhance = is_coord_enhance
         transform_list = [
             A.geometric.resize.Resize(self.input_size, self.input_size, interpolation=cv2.INTER_LINEAR, always_apply=True)
         ]
@@ -107,6 +107,16 @@ class FaceDataset(Dataset):
             label -= 1.0 # to -1 ~ 1
             label = label.flatten()
             label = torch.tensor(label, dtype=torch.float32)
+
+        if self.is_coord_enhance:
+            end = self.input_size - 1
+            x = torch.linspace(0, end, steps=self.input_size) / (self.input_size / 2) - 1
+            y = torch.linspace(0, end, steps=self.input_size) / (self.input_size / 2) - 1
+            xx, yy = torch.meshgrid(x, y, indexing='xy')
+            xx = xx.view(1, self.input_size, self.input_size)
+            yy = yy.view(1, self.input_size, self.input_size)
+            rr = torch.sqrt(xx * xx + yy * yy)
+            img = torch.cat((img, xx, yy, rr), dim = 0)
         if self.is_train:
             return img, label
         else:

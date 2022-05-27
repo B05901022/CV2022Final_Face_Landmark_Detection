@@ -20,6 +20,7 @@ import wandb
 import numpy as np
 import copy
 import cv2
+from models.models_select import model_sel
 
 def plot_keypoints_2(img, keypoints):
     img = copy.deepcopy(img)
@@ -32,7 +33,8 @@ class FaceSynthetics(pl.LightningModule):
         super().__init__()
         self.save_hyperparameters()
         # backbone = timm.create_model(backbone, num_classes=68*2)
-        backbone = torchvision.models.mobilenet_v2(num_classes=68*2)
+        # backbone = torchvision.models.mobilenet_v2(num_classes=68*2)
+        backbone = model_sel(backbone)
         self.backbone = backbone
         #self.loss = nn.MSELoss(reduction='mean')
         self.loss = nn.L1Loss(reduction='mean')
@@ -211,8 +213,8 @@ def main(hparams):
         # --- Dataset 
         train_path = osp.join(hparams.dataset_path, 'synthetics_train')
         val_path = osp.join(hparams.dataset_path, 'aflw_val')
-        train_set = FaceDataset(root_dir = train_path, is_train=True)
-        val_set = FaceDataset(root_dir=val_path, is_train=False)
+        train_set = FaceDataset(root_dir = train_path, is_train=True, is_coord_enhance = hparams.cood_en)
+        val_set = FaceDataset(root_dir=val_path, is_train=False, is_coord_enhance = hparams.cood_en)
 
         train_loader = DataLoader(train_set, batch_size=hparams.bs, shuffle=True, num_workers=hparams.num_workers, pin_memory=True, prefetch_factor = 8)
         val_loader = DataLoader(val_set, batch_size=hparams.bs, shuffle=False)
@@ -221,10 +223,10 @@ def main(hparams):
         model = FaceSynthetics(backbone=hparams.backbone, lr = hparams.lr, wd = hparams.wd, beta1 = hparams.beta1, beta2 = hparams.beta2, momentum = hparams.momentum)
         # --- Fit model to trainer ---
         checkpoint_callback = ModelCheckpoint(
-            monitor='val_loss',
-            dirpath=hparams.ckpt_path,
-            filename='{epoch:02d}-{val_loss:.6f}',
-            save_top_k=5,
+            monitor = 'val_loss',
+            dirpath = hparams.ckpt_path,
+            filename = hparams.exp_name +'_'+ '{epoch:02d}-{val_loss:.4f}',
+            save_top_k = 5,
             mode='min',
             )
 
@@ -248,10 +250,11 @@ def main(hparams):
         Path(hparams.log_path).mkdir(parents=True, exist_ok=True)
 
         # --- Load model from checkpoint ---
-        model = FaceSynthetics.load_from_checkpoint(hparams.ckpt_path)
+        ckpt = osp.join(hparams.ckpt_path, hparams.ckpt_name)
+        model = FaceSynthetics.load_from_checkpoint(ckpt)
         # --- Fit testing ---
         test_path = osp.join(hparams.dataset_path, 'aflw_val')
-        test_set = FaceDataset(root_dir=test_path, is_train=False)
+        test_set = FaceDataset(root_dir=test_path, is_train=False, is_coord_enhance = hparams.cood_en)
         test_loader = DataLoader(test_set, batch_size=hparams.bs, shuffle=False)
 
         trainer = pl.Trainer(
@@ -276,7 +279,7 @@ if __name__ == "__main__":
     parser.add_argument('--ckpt_name', help='Checkpoint name.', default='default_ckpt', type=str)
 
     # --- Model select
-    parser.add_argument('--backbone', default='mobilenetv3_small_075', type=str)
+    parser.add_argument('--backbone', default='mobilenet_v2', type=str)
 
     # --- Training Hyperparameters ---
     parser.add_argument('--epoch', help='Training epochs.', default=50, type=int)
@@ -286,13 +289,14 @@ if __name__ == "__main__":
     parser.add_argument('--beta2', help='beta2 of Adam', default=0.999, type=float)
     parser.add_argument('--momentum', help='momentum', default=0.9, type=float)
     parser.add_argument('--bs', help='Batch size.', default=50, type=int)
+    parser.add_argument('--cood_en', help='Append coordinate information', action='store_true')
     parser.add_argument('--seed', help='Random seed.', default=7, type=int)
     # --- GPU/CPU Arguments ---
     parser.add_argument('--num_workers', help='Number of workers', default=4, type=int)
     parser.add_argument('--gpu', help='Which GPU to be used (if none, specify as -1).', type=int, default = 3)
 
     # --- Mode ---
-    parser.add_argument('--train', help='Run in train mode.', action='store_true', default = True)
+    parser.add_argument('--train', help='Run in train mode.', action='store_true')
     parser.add_argument('--test', help='Run in test mode.', action='store_true')
     parser = pl.Trainer.add_argparse_args(parser)
     

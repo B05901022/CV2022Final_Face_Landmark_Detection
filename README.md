@@ -22,6 +22,12 @@
 ## 05/27 -- update by YS
 - [Reference](https://github.com/deepinsight/insightface/tree/master/alignment/synthetics/datasets)
     - In src folder
-        - dataset.py : When testing, return original image.
+        - dataset.py
+            - When testing, return original image.
+            - Coordinate enhancement
     - main.py
         - Finish testing part
+- In script folder
+    - train.sh : simple training script
+- In models folder
+    - models_select : You can add entrypoints of your models 
