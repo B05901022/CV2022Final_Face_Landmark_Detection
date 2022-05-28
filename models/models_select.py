@@ -11,5 +11,5 @@ adapt_dict = {
     'MLP_2L' : MLP_2L,
 }
 
-def adapt_sel(model_name):
-    return adapt_dict[model_name]()
+def adapt_sel(model_name, up_scale = 4):
+    return adapt_dict[model_name](up_scale = up_scale)

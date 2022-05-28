@@ -30,10 +30,10 @@ def plot_keypoints_2(img, keypoints):
     return img
 
 class Label_adaption(pl.LightningModule):
-    def __init__(self, backbone, stage_1_model, lr, wd, beta1 = 0.9, beta2 = 0.999, momentum = 0.9):
+    def __init__(self, backbone, up_scale, stage_1_model, lr, wd, beta1 = 0.9, beta2 = 0.999, momentum = 0.9):
         super().__init__()
         self.save_hyperparameters()
-        backbone = adapt_sel(backbone)
+        backbone = adapt_sel(backbone, up_scale)
         self.backbone = backbone
         self.stage_1_model = stage_1_model
         self.stage_1_model.freeze()
@@ -498,7 +498,8 @@ def main(hparams):
         model_stage1 = FaceSynthetics.load_from_checkpoint(ckpt)
         device = torch.device('cuda:{}'.format(hparams.gpu))
         model_stage1 = model_stage1.to(device)
-        model = Label_adaption(backbone=hparams.adap_backbone, stage_1_model = model_stage1, lr = hparams.lr, wd = hparams.wd, beta1 = hparams.beta1, beta2 = hparams.beta2, momentum = hparams.momentum)
+        model = Label_adaption(backbone=hparams.adap_backbone, up_scale = hparams.up_scale,stage_1_model = model_stage1, \
+                lr = hparams.lr, wd = hparams.wd, beta1 = hparams.beta1, beta2 = hparams.beta2, momentum = hparams.momentum)
         
         # --- Fit model to trainer ---
         checkpoint_callback = ModelCheckpoint(
@@ -557,6 +558,7 @@ if __name__ == "__main__":
     # --- Model select
     parser.add_argument('--backbone', default='mobilenet_v2', type=str)
     parser.add_argument('--adap_backbone', default='MLP_2L', type=str)
+    parser.add_argument('--up_scale', help='Upscale for MLP', default=4, type=int)
 
     # --- Training Hyperparameters ---
     parser.add_argument('--epoch', help='Training epochs.', default=50, type=int)
@@ -568,6 +570,7 @@ if __name__ == "__main__":
     parser.add_argument('--bs', help='Batch size.', default=50, type=int)
     parser.add_argument('--cood_en', help='Append coordinate information', action='store_true')
     parser.add_argument('--seed', help='Random seed.', default=7, type=int)
+
     # --- GPU/CPU Arguments ---
     parser.add_argument('--num_workers', help='Number of workers', default=4, type=int)
     parser.add_argument('--gpu', help='Which GPU to be used (if none, specify as -1).', type=int, default = 3)

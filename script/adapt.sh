@@ -26,12 +26,15 @@ gpu=3                               # Which gpu you want to use
 
 backbone=mobilenet_v2               # Model backbone
 adap_backbone=MLP_2L
+up_scale=4
+
 wandb login
-echo ${test}
+
 
 if ${cood_en}; then
   python main.py \
     --backbone ${backbone}\
+    --up_scale ${up_scale} \
     --adap_backbone ${adap_backbone}\
     --dataset_path ${dataset_path} \
     --ckpt_path ${ckpt_path} \
@@ -54,6 +57,7 @@ if ${cood_en}; then
 else
   python main.py \
     --backbone ${backbone}\
+    --up_scale ${up_scale} \
     --adap_backbone ${adap_backbone}\
     --dataset_path ${dataset_path} \
     --ckpt_path ${ckpt_path} \

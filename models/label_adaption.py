@@ -2,14 +2,16 @@ import torch.nn as nn
 import torch
 
 class MLP_2L(nn.Module):
-    def __init__(self):
+    def __init__(self, up_scale = 4):
         super(MLP_2L, self).__init__()
+        self.up_scale = up_scale
+
         self.layer1 = nn.Sequential(
-            nn.Linear(136,544),
-            nn.BatchNorm1d(544),
-            nn.ReLU())
+            nn.Linear(136,up_scale * 136, bias = False),
+            nn.BatchNorm1d(up_scale * 136))
+            
         self.layer2 = nn.Sequential(
-            nn.Linear(544,136))
+            nn.Linear(up_scale * 136,136, bias = False))
 
     def forward(self, x):
         out = self.layer1(x)
