@@ -73,7 +73,8 @@ class Label_adaption(pl.LightningModule):
         
         y = y.view(-1,68,2)
         y_hat = y_hat.view(-1,68,2)
-        
+        out = out.view(-1,68,2)
+
         kp_GT = y.cpu().detach().numpy()
         kp_p = y_hat.cpu().detach().numpy()
         
