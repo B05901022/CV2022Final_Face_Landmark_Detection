@@ -51,7 +51,10 @@ class Label_adaption(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         x, y = batch
-        out = self.stage_1_model(x)
+        self.stage_1_model.eval()
+        with torch.no_grad():
+            out = self.stage_1_model(x)
+
         y_hat = self.backbone(out)
         if self.hard_mining:
             loss = torch.abs(y_hat - y) #(B,K)
@@ -496,8 +499,8 @@ def main(hparams):
         # --- Model instantiation ---
         ckpt = osp.join(hparams.ckpt_path, hparams.ckpt_name)
         model_stage1 = FaceSynthetics.load_from_checkpoint(ckpt)
-        device = torch.device('cuda:{}'.format(hparams.gpu))
-        model_stage1 = model_stage1.to(device)
+        #device = torch.device('cuda:{}'.format(hparams.gpu))
+        #model_stage1 = model_stage1.to(device)
         model = Label_adaption(backbone=hparams.adap_backbone, up_scale = hparams.up_scale,stage_1_model = model_stage1, \
                 lr = hparams.lr, wd = hparams.wd, beta1 = hparams.beta1, beta2 = hparams.beta2, momentum = hparams.momentum)
         
