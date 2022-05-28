@@ -8,7 +8,8 @@ class MLP_2L(nn.Module):
 
         self.layer1 = nn.Sequential(
             nn.Linear(136,up_scale * 136, bias = False),
-            nn.BatchNorm1d(up_scale * 136, affine=False))
+            nn.BatchNorm1d(up_scale * 136))
+            
         self.layer2 = nn.Sequential(
             nn.Linear(up_scale * 136,136, bias = False))
 
