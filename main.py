@@ -496,6 +496,8 @@ def main(hparams):
         # --- Model instantiation ---
         ckpt = osp.join(hparams.ckpt_path, hparams.ckpt_name)
         model_stage1 = FaceSynthetics.load_from_checkpoint(ckpt)
+        device = torch.device('cuda:{}'.format(hparams.gpu))
+        model_stage1 = model_stage1.to(device)
         model = Label_adaption(backbone=hparams.adap_backbone, stage_1_model = model_stage1, lr = hparams.lr, wd = hparams.wd, beta1 = hparams.beta1, beta2 = hparams.beta2, momentum = hparams.momentum)
         
         # --- Fit model to trainer ---
