@@ -6,8 +6,8 @@ ckpt_path=./checkpoints/
 log_path=./log/
 
 # --- Logging Arguments ---
-exp_name=Exp_2                      # Name for wand running
-ckpt_name=default_ckpt              # name of check point (Used when testing)
+exp_name=Exp_2_adap_train                      # Name for wand running
+ckpt_name=Exp_2_epoch=29-val_loss=0.0278.ckpt              # name of check point (Used when testing)
 
 # --- Training Hyperparameters ---
 epoch=30                         
@@ -25,12 +25,14 @@ gpu=3                               # Which gpu you want to use
 
 
 backbone=mobilenet_v2               # Model backbone
-
+adap_backbone=MLP_2L
 wandb login
 echo ${test}
 
 if ${cood_en}; then
   python main.py \
+    --backbone ${backbone}\
+    --adap_backbone ${adap_backbone}\
     --dataset_path ${dataset_path} \
     --ckpt_path ${ckpt_path} \
     --log_path ${log_path} \
@@ -46,10 +48,13 @@ if ${cood_en}; then
     --seed ${seed} \
     --num_workers ${num_workers} \
     --gpu ${gpu} \
-    --train ${train}\
+    --adaption_train ${adaption_train} \
     --cood_en ${cood_en}\
+
 else
   python main.py \
+    --backbone ${backbone}\
+    --adap_backbone ${adap_backbone}\
     --dataset_path ${dataset_path} \
     --ckpt_path ${ckpt_path} \
     --log_path ${log_path} \
@@ -65,7 +70,6 @@ else
     --seed ${seed} \
     --num_workers ${num_workers} \
     --gpu ${gpu} \
-    --train ${train}
+    --adaption_train ${adaption_train}\
+
 fi
-
-
