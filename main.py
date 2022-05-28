@@ -98,17 +98,17 @@ class Label_adaption(pl.LightningModule):
             # keypoint transform
             kp_GT = y.cpu().detach().numpy()[0]
             kp_GT = (kp_GT + 1) / 2 * 256
-            kp_GT = np.array(kp_GT).astype(np.int)
+            kp_GT = np.array(kp_GT).astype(np.int32)
             GT = plot_keypoints_2(img, kp_GT)
 
             kp_p = y_hat.cpu().detach().numpy()[0]
             kp_p = (kp_p + 1) / 2 * 256
-            kp_p = np.array(kp_p).astype(np.int)
+            kp_p = np.array(kp_p).astype(np.int32)
             predict = plot_keypoints_2(img, kp_p)
 
             kp_b = out.cpu().detach().numpy()[0]
             kp_b = (kp_b + 1) / 2 * 256
-            kp_b = np.array(kp_b).astype(np.int)
+            kp_b = np.array(kp_b).astype(np.int32)
             predict_b = plot_keypoints_2(img, kp_b)
 
             images = wandb.Image(GT, caption="GT")
@@ -128,19 +128,19 @@ class Label_adaption(pl.LightningModule):
         y = y.view(-1,68,2)
         kp_GT = y.cpu().detach().numpy()
         kp_GT = (kp_GT + 1) / 2 * 256
-        kp_GT = np.array(kp_GT).astype(np.int)
+        kp_GT = np.array(kp_GT).astype(np.int32)
         
         # before adaption
         out = out.view(-1,68,2)
         kp_b = out.cpu().detach().numpy()
         kp_b = (kp_b + 1) / 2 * 256
-        kp_b = np.array(kp_b).astype(np.int)
+        kp_b = np.array(kp_b).astype(np.int32)
         
         # after adaption
         y_hat = y_hat.view(-1,68,2)
         kp_p = y_hat.cpu().detach().numpy()
         kp_p = (kp_p + 1) / 2 * 256
-        kp_p = np.array(kp_p).astype(np.int)
+        kp_p = np.array(kp_p).astype(np.int32)
         
         imgs_gt, imgs_p, imgs_b = [], [], []
         for i in range(img_o.shape[0]):
@@ -301,12 +301,12 @@ class FaceSynthetics(pl.LightningModule):
             # keypoint transform
             kp_GT = y.cpu().detach().numpy()[0]
             kp_GT = (kp_GT + 1) / 2 * 256
-            kp_GT = np.array(kp_GT).astype(np.int)
+            kp_GT = np.array(kp_GT).astype(np.int32)
             GT = plot_keypoints_2(img, kp_GT)
 
             kp_p = y_hat.cpu().detach().numpy()[0]
             kp_p = (kp_p + 1) / 2 * 256
-            kp_p = np.array(kp_p).astype(np.int)
+            kp_p = np.array(kp_p).astype(np.int32)
             predict = plot_keypoints_2(img, kp_p)
             images = wandb.Image(GT, caption="GT")
             wandb.log({"GT": images})
@@ -322,12 +322,12 @@ class FaceSynthetics(pl.LightningModule):
         y = y.view(-1,68,2)
         kp_GT = y.cpu().detach().numpy()
         kp_GT = (kp_GT + 1) / 2 * 256
-        kp_GT = np.array(kp_GT).astype(np.int)
+        kp_GT = np.array(kp_GT).astype(np.int32)
         
         y_hat = y_hat.view(-1,68,2)
         kp_p = y_hat.cpu().detach().numpy()
         kp_p = (kp_p + 1) / 2 * 256
-        kp_p = np.array(kp_p).astype(np.int)
+        kp_p = np.array(kp_p).astype(np.int32)
         
         imgs_gt, imgs_p = [], []
         for i in range(img_o.shape[0]):
