@@ -109,14 +109,14 @@ class Label_adaption(pl.LightningModule):
             kp_b = out.cpu().detach().numpy()[0]
             kp_b = (kp_b + 1) / 2 * 256
             kp_b = np.array(kp_b).astype(np.int)
-            predict_a = plot_keypoints_2(img, kp_b)
+            predict_b = plot_keypoints_2(img, kp_b)
 
             images = wandb.Image(GT, caption="GT")
             wandb.log({"GT": images})
-            images = wandb.Image(predict, caption="before")
-            wandb.log({"before": images})
-            images = wandb.Image(predict_a, caption="after")
+            images = wandb.Image(predict, caption="after")
             wandb.log({"after": images})
+            images = wandb.Image(predict_b, caption="before")
+            wandb.log({"before": images})
 
     def test_step(self, batch, batch_idx):
         img_o, x, y = batch
