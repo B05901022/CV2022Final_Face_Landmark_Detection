@@ -246,7 +246,9 @@ class FaceSynthetics(pl.LightningModule):
         backbone = model_sel(backbone)
         self.backbone = backbone
         #self.loss = nn.MSELoss(reduction='mean')
+        
         self.loss = nn.L1Loss(reduction='mean')
+
         self.hard_mining = False
         self.lr = lr
         self.wd = wd

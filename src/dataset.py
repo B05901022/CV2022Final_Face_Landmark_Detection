@@ -99,6 +99,7 @@ class FaceDataset(Dataset):
             label = t['keypoints']
             label = np.array(label, dtype=np.float32)
             #print(img.shape)
+            
             if flipped:
                 #label[:, 0] = self.input_size - 1 - label[:, 0]  #already applied in horizantal flip aug
                 label = label[self.flip_order,:]
@@ -117,6 +118,7 @@ class FaceDataset(Dataset):
             yy = yy.view(1, self.input_size, self.input_size)
             rr = torch.sqrt(xx * xx + yy * yy)
             img = torch.cat((img, xx, yy, rr), dim = 0)
+
         if self.is_train:
             return img, label
         else:
