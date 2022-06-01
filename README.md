@@ -42,3 +42,13 @@
     - adapt.sh : For training of label adaption
 - In models folder
     - models_select.py : Add endtrypoint for label adaption
+
+## 06/01 -- update by YS
+- main.py
+    - Update for generate solution.txt for online server.
+    - Separate the fcn from backone model.
+- In script folder
+    - gen_result.sh : For gerenating solution.txt (Only without label adaption)
+- 
+# Todos
+1. Generate solution.txt for label adaption

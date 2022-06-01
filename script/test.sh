@@ -11,6 +11,7 @@ ckpt_name=Exp_2_epoch=29-val_loss=0.0278.ckpt              # name of check point
 
 # --- Training Hyperparameters ---
 epoch=30                         
+loss=L1
 lr=0.01
 wd=0.00001
 beta1=0.9                           # if use Adam, beta would be used
@@ -36,6 +37,7 @@ if $cood_en; then
     --exp_name ${exp_name} \
     --ckpt_name ${ckpt_name} \
     --epoch ${epoch} \
+    --loss ${loss} \ 
     --lr ${lr} \
     --wd ${wd} \
     --beta1 ${beta1} \
@@ -56,6 +58,7 @@ else
     --exp_name ${exp_name} \
     --ckpt_name ${ckpt_name} \
     --epoch ${epoch} \
+    --loss ${loss} \
     --lr ${lr} \
     --wd ${wd} \
     --beta1 ${beta1} \

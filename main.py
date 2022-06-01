@@ -22,6 +22,8 @@ import numpy as np
 import copy
 import cv2
 from models.models_select import model_sel, adapt_sel
+from loss_function.loss_select import loss_sel
+from src.tool import gen_result_data
 
 def plot_keypoints_2(img, keypoints):
     img = copy.deepcopy(img)
@@ -30,14 +32,14 @@ def plot_keypoints_2(img, keypoints):
     return img
 
 class Label_adaption(pl.LightningModule):
-    def __init__(self, backbone, up_scale, stage_1_model, lr, wd, beta1 = 0.9, beta2 = 0.999, momentum = 0.9):
+    def __init__(self, backbone, loss_func, up_scale, stage_1_model, lr, wd, beta1 = 0.9, beta2 = 0.999, momentum = 0.9):
         super().__init__()
         self.save_hyperparameters()
         backbone = adapt_sel(backbone, up_scale)
         self.backbone = backbone
         self.stage_1_model = stage_1_model
         self.stage_1_model.freeze()
-        self.loss = nn.L1Loss(reduction='mean')
+        self.loss = loss_sel(loss_func)
         self.hard_mining = False
         self.lr = lr
         self.wd = wd
@@ -227,7 +229,7 @@ class Label_adaption(pl.LightningModule):
         opt = torch.optim.SGD(self.parameters(), lr = self.lr, momentum=self.momentum, weight_decay = self.wd)
         
         def lr_step_func(epoch):
-            return 0.1 ** len([m for m in [5, 10, 15] if m <= epoch])
+            return 0.1 ** len([m for m in [15, 25, 28] if m <= epoch])
         scheduler = torch.optim.lr_scheduler.LambdaLR(
                 optimizer=opt, lr_lambda=lr_step_func)
         lr_scheduler = {
@@ -238,16 +240,13 @@ class Label_adaption(pl.LightningModule):
         return [opt], [lr_scheduler]
 
 class FaceSynthetics(pl.LightningModule):
-    def __init__(self, backbone, lr, wd, beta1 = 0.9, beta2 = 0.999, momentum = 0.9):
+    def __init__(self, backbone, loss_func, lr, wd, beta1 = 0.9, beta2 = 0.999, momentum = 0.9):
         super().__init__()
         self.save_hyperparameters()
-        # backbone = timm.create_model(backbone, num_classes=68*2)
-        # backbone = torchvision.models.mobilenet_v2(num_classes=68*2)
-        backbone = model_sel(backbone)
-        self.backbone = backbone
-        #self.loss = nn.MSELoss(reduction='mean')
-        
-        self.loss = nn.L1Loss(reduction='mean')
+        self.backbone = model_sel(backbone)
+        self.fc = self.backbone.classifier
+        self.backbone.classifier = nn.Identity()
+        self.loss = loss_sel(loss_func)
 
         self.hard_mining = False
         self.lr = lr
@@ -263,6 +262,7 @@ class FaceSynthetics(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self.backbone(x)
+        y_hat = self.fc(y_hat)
         if self.hard_mining:
             loss = torch.abs(y_hat - y) #(B,K)
             loss = torch.mean(loss, dim=1) #(B,)
@@ -279,6 +279,7 @@ class FaceSynthetics(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         img_o, x, y = batch
         y_hat = self.backbone(x)
+        y_hat = self.fc(y_hat)
         
         y = y.view(-1,68,2)
         y_hat = y_hat.view(-1,68,2)
@@ -321,6 +322,7 @@ class FaceSynthetics(pl.LightningModule):
     def test_step(self, batch, batch_idx):
         img_o, x, y = batch
         y_hat = self.backbone(x)
+        y_hat = self.fc(y_hat)
         
         img_o = img_o.cpu().detach().numpy()
         
@@ -422,6 +424,7 @@ def main(hparams):
     pl.seed_everything(hparams.seed)
     # -- Logger instantiation ---
     logger = WandbLogger(project="cv_final~~~", name = hparams.exp_name, entity = 'cv_final')
+    #wandb.init()
     #logger = TensorBoardLogger(hparams.log_path)
     # --- Trainer instantiation ---
 
@@ -440,7 +443,7 @@ def main(hparams):
         val_loader = DataLoader(val_set, batch_size=hparams.bs, shuffle=False)
 
         # --- Model instantiation ---
-        model = FaceSynthetics(backbone=hparams.backbone, lr = hparams.lr, wd = hparams.wd, beta1 = hparams.beta1, beta2 = hparams.beta2, momentum = hparams.momentum)
+        model = FaceSynthetics(backbone=hparams.backbone, loss_func = hparams.loss, lr = hparams.lr, wd = hparams.wd, beta1 = hparams.beta1, beta2 = hparams.beta2, momentum = hparams.momentum)
         # --- Fit model to trainer ---
         checkpoint_callback = ModelCheckpoint(
             monitor = 'val_loss',
@@ -448,6 +451,7 @@ def main(hparams):
             filename = hparams.exp_name +'_'+ '{epoch:02d}-{val_loss:.4f}',
             save_top_k = 5,
             mode='min',
+            save_weights_only=True,
             )
 
         lr_monitor = LearningRateMonitor(logging_interval='step')
@@ -462,6 +466,8 @@ def main(hparams):
             progress_bar_refresh_rate=2,
             max_epochs = hparams.epoch,
             profiler="simple",
+            #limit_train_batches=0.1,
+            #fast_dev_run=3,
         )
         trainer.fit(model, train_loader, val_loader)
 
@@ -503,7 +509,7 @@ def main(hparams):
         model_stage1 = FaceSynthetics.load_from_checkpoint(ckpt)
         #device = torch.device('cuda:{}'.format(hparams.gpu))
         #model_stage1 = model_stage1.to(device)
-        model = Label_adaption(backbone=hparams.adap_backbone, up_scale = hparams.up_scale,stage_1_model = model_stage1, \
+        model = Label_adaption(backbone=hparams.adap_backbone, loss_func = hparams.loss, up_scale = hparams.up_scale,stage_1_model = model_stage1, \
                 lr = hparams.lr, wd = hparams.wd, beta1 = hparams.beta1, beta2 = hparams.beta2, momentum = hparams.momentum)
         
         # --- Fit model to trainer ---
@@ -513,6 +519,7 @@ def main(hparams):
             filename= hparams.exp_name +'_adaption_'+ '{epoch:02d}-{val_loss:.4f}',
             save_top_k=5,
             mode='min',
+            save_weights_only=True,
             )
 
         lr_monitor = LearningRateMonitor(logging_interval='step')
@@ -547,6 +554,13 @@ def main(hparams):
         )
         trainer.test(model, dataloaders=test_loader)
 
+    elif hparams.test_file:
+        ckpt = osp.join(hparams.ckpt_path, hparams.ckpt_name)
+        model = FaceSynthetics.load_from_checkpoint(ckpt)
+        test_path = osp.join(hparams.dataset_path, 'aflw_test')
+        gen_result_data(model = model, path = test_path)
+        
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
@@ -567,6 +581,7 @@ if __name__ == "__main__":
 
     # --- Training Hyperparameters ---
     parser.add_argument('--epoch', help='Training epochs.', default=50, type=int)
+    parser.add_argument('--loss', help='Loss function.', default='L1', type=str)
     parser.add_argument('--lr', help='Learning rate.', default=1e-2, type=float)
     parser.add_argument('--wd', help='Weight decay of optimizer', default=1e-5, type=float)
     parser.add_argument('--beta1', help='beta1 of Adam', default=0.9, type=float)
@@ -585,9 +600,9 @@ if __name__ == "__main__":
     parser.add_argument('--test', help='Run in test mode.', action='store_true')
     parser.add_argument('--adaption_train', help='Run in test mode.', action='store_true')
     parser.add_argument('--adaption_test', help='Run in test mode.', action='store_true')
+    parser.add_argument('--test_file', help='Generate testing data.', action='store_true')
+
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
-    print(args.test)
-    print("123")
     main(args)
     wandb.finish()
