@@ -22,7 +22,7 @@ class WingLoss(nn.Module):
         y2 = diff[diff>=self.omega]
         
         loss_below = self.omega * (1+y1/self.epsilon).log()
-        loss_above = y2 - self.const_c
+        loss_above = y2 - self.const_c.type_as(y2)
         
         return (loss_below.sum() + loss_above.sum()) / pred.shape[0]
     

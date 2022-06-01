@@ -6,12 +6,12 @@ ckpt_path=./checkpoints/
 log_path=./log/
 
 # --- Logging Arguments ---
-exp_name=Exp_2                      # Name for wand running
+exp_name=Exp_3                      # Name for wand running
 ckpt_name=default_ckpt              # name of check point (Used when testing)
 
 # --- Training Hyperparameters ---
 epoch=30
-loss=L1                         
+loss=Wing                      
 lr=0.01
 wd=0.00001
 beta1=0.9                           # if use Adam, beta would be used
@@ -50,6 +50,7 @@ if ${cood_en}; then
     --gpu ${gpu} \
     --train ${train}\
     --cood_en ${cood_en}\
+    
 else
   python main.py \
     --dataset_path ${dataset_path} \
@@ -69,6 +70,7 @@ else
     --num_workers ${num_workers} \
     --gpu ${gpu} \
     --train ${train}
+    
 fi
 
 

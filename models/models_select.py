@@ -13,3 +13,10 @@ adapt_dict = {
 
 def adapt_sel(model_name, up_scale = 4):
     return adapt_dict[model_name](up_scale = up_scale)
+
+fc_dict = {
+
+}
+
+def fc_sel(fc_name = None):
+    return models_dict[fc_name]

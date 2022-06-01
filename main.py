@@ -21,7 +21,7 @@ import wandb
 import numpy as np
 import copy
 import cv2
-from models.models_select import model_sel, adapt_sel
+from models.models_select import model_sel, adapt_sel, fc_sel
 from loss_function.loss_select import loss_sel
 from src.tool import gen_result_data
 
@@ -240,11 +240,13 @@ class Label_adaption(pl.LightningModule):
         return [opt], [lr_scheduler]
 
 class FaceSynthetics(pl.LightningModule):
-    def __init__(self, backbone, loss_func, lr, wd, beta1 = 0.9, beta2 = 0.999, momentum = 0.9):
+    def __init__(self, backbone, fc_extend, loss_func, lr, wd, beta1 = 0.9, beta2 = 0.999, momentum = 0.9):
         super().__init__()
         self.save_hyperparameters()
         self.backbone = model_sel(backbone)
         self.fc = self.backbone.classifier
+        if fc_extend :
+            self.fc[1] = nn.Linear(self.fc[1].in_features, 68*3)
         self.backbone.classifier = nn.Identity()
         self.loss = loss_sel(loss_func)
 
@@ -257,6 +259,7 @@ class FaceSynthetics(pl.LightningModule):
     def forward(self, x):
         # use forward for inference/predictions
         y = self.backbone(x)
+        y = self.fc(y)
         return y
 
     def training_step(self, batch, batch_idx):
@@ -443,7 +446,7 @@ def main(hparams):
         val_loader = DataLoader(val_set, batch_size=hparams.bs, shuffle=False)
 
         # --- Model instantiation ---
-        model = FaceSynthetics(backbone=hparams.backbone, loss_func = hparams.loss, lr = hparams.lr, wd = hparams.wd, beta1 = hparams.beta1, beta2 = hparams.beta2, momentum = hparams.momentum)
+        model = FaceSynthetics(backbone=hparams.backbone, fc_extend = hparams.fc_extend, loss_func = hparams.loss, lr = hparams.lr, wd = hparams.wd, beta1 = hparams.beta1, beta2 = hparams.beta2, momentum = hparams.momentum)
         # --- Fit model to trainer ---
         checkpoint_callback = ModelCheckpoint(
             monitor = 'val_loss',
@@ -578,6 +581,7 @@ if __name__ == "__main__":
     parser.add_argument('--backbone', default='mobilenet_v2', type=str)
     parser.add_argument('--adap_backbone', default='MLP_2L', type=str)
     parser.add_argument('--up_scale', help='Upscale for MLP', default=4, type=int)
+    parser.add_argument('--fc_extend', help='Extend output dimension from 68*2 to 68*3', action='store_true')
 
     # --- Training Hyperparameters ---
     parser.add_argument('--epoch', help='Training epochs.', default=50, type=int)
