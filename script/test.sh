@@ -6,8 +6,8 @@ ckpt_path=./checkpoints/
 log_path=./log/
 
 # --- Logging Arguments ---
-exp_name=Exp_2_test                      # Name for wand running
-ckpt_name=Exp_2_epoch=29-val_loss=0.0278.ckpt              # name of check point (Used when testing)
+exp_name=Exp_6_test                      # Name for wand running
+ckpt_name=Exp_6_mbv2_L1_rand_crop_epoch=27-val_loss=0.0279.ckpt              # name of check point (Used when testing)
 
 # --- Training Hyperparameters ---
 epoch=30                         

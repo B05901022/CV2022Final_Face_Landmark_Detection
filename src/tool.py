@@ -45,6 +45,12 @@ def gen_result_data(model, path):
             with torch.no_grad():
                 out = model(img)
 
+                img_flip = img.clone().flip(dims=(-1,))
+                out_flip = model(img_flip)
+                out_flip = out_flip.view(-1,68,2)
+                
+                out = (out + model._flip_keypoints(out_flip).view(-1,68 * 2)) / 2
+
             kp_p = out.cpu().detach().numpy()[0]
             kp_p = (kp_p + 1) / 2 * 384
 
@@ -54,5 +60,4 @@ def gen_result_data(model, path):
             i = i + 1
             if (i % 100 == 0):
                 print("%d images", i)
-
 

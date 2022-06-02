@@ -6,12 +6,12 @@ ckpt_path=./checkpoints/
 log_path=./log/
 
 # --- Logging Arguments ---
-exp_name=Exp_3                      # Name for wand running
+exp_name=Exp_6_mbv2_L1_rand_cutout                      # Name for wand running
 ckpt_name=default_ckpt              # name of check point (Used when testing)
 
 # --- Training Hyperparameters ---
 epoch=30
-loss=Wing                      
+loss=L1                           # Wing, AdaptWing, SmoothL1
 lr=0.01
 wd=0.00001
 beta1=0.9                           # if use Adam, beta would be used

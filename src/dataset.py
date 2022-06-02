@@ -16,18 +16,27 @@ from PIL import Image
 import copy
 
 class FaceDataset(Dataset):
-    def __init__(self, root_dir, is_train, is_coord_enhance = False):
+    def __init__(self, root_dir, is_train, is_coord_enhance = False, is_random_resize_crop = False):
         super(FaceDataset, self).__init__()
 
         #self.local_rank = local_rank
         self.is_train = is_train
-        self.input_size = 256
         self.num_kps = 68
         self.is_train = is_train
         self.is_coord_enhance = is_coord_enhance
-        transform_list = [
-            A.geometric.resize.Resize(self.input_size, self.input_size, interpolation=cv2.INTER_LINEAR, always_apply=True)
-        ]
+
+        if is_random_resize_crop:
+            self.input_size = 256
+            transform_list = [
+                # A.geometric.resize.Resize(self.input_size, self.input_size, interpolation=cv2.INTER_LINEAR, always_apply=True),
+                A.augmentations.crops.transforms.RandomResizedCrop(self.input_size, self.input_size, always_apply=True)
+            ]
+        else:
+            self.input_size = 256
+            transform_list = [
+                A.geometric.resize.Resize(self.input_size, self.input_size, interpolation=cv2.INTER_LINEAR, always_apply=True),
+            ]
+
         if is_train:
             transform_list += \
                 [
@@ -46,12 +55,15 @@ class FaceDataset(Dataset):
         transform_list += \
             [
                 A.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5], always_apply = True),
+                A.Cutout(),
                 ToTensorV2(),
             ]
         self.transform = A.ReplayCompose(
             transform_list,
             keypoint_params=A.KeypointParams(format='xy', remove_invisible=False)
         )
+
+
         
         
         self.root_dir = root_dir

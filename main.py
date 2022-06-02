@@ -80,8 +80,8 @@ class Label_adaption(pl.LightningModule):
         y_hat = y_hat.view(-1,68,2)
         out = out.view(-1,68,2)
 
-        kp_GT = y.cpu().detach().numpy()
-        kp_p = y_hat.cpu().detach().numpy()
+        kp_GT = y.detach().cpu().numpy()
+        kp_p = y_hat.detach().cpu().numpy()
         
         dis = kp_GT - kp_p
         dis = np.sqrt(np.sum(np.power(dis, 2), 2))
@@ -96,22 +96,22 @@ class Label_adaption(pl.LightningModule):
         
         # plot result on wandb
         if (batch_idx == 0):
-            img_o = img_o.cpu().detach().numpy()[0]
+            img_o = img_o.detach().cpu().numpy()[0]
             img = np.array(img_o).astype(np.uint8)
             img = cv2.resize(img, dsize=(256, 256))
             
             # keypoint transform
-            kp_GT = y.cpu().detach().numpy()[0]
+            kp_GT = y.detach().cpu().numpy()[0]
             kp_GT = (kp_GT + 1) / 2 * 256
             kp_GT = np.array(kp_GT).astype(np.int32)
             GT = plot_keypoints_2(img, kp_GT)
 
-            kp_p = y_hat.cpu().detach().numpy()[0]
+            kp_p = y_hat.detach().cpu().numpy()[0]
             kp_p = (kp_p + 1) / 2 * 256
             kp_p = np.array(kp_p).astype(np.int32)
             predict = plot_keypoints_2(img, kp_p)
 
-            kp_b = out.cpu().detach().numpy()[0]
+            kp_b = out.detach().cpu().numpy()[0]
             kp_b = (kp_b + 1) / 2 * 256
             kp_b = np.array(kp_b).astype(np.int32)
             predict_b = plot_keypoints_2(img, kp_b)
@@ -128,22 +128,22 @@ class Label_adaption(pl.LightningModule):
         out = self.stage_1_model(x)
         y_hat = self.backbone(out)
         
-        img_o = img_o.cpu().detach().numpy()
+        img_o = img_o.detach().cpu().numpy()
         
         y = y.view(-1,68,2)
-        kp_GT = y.cpu().detach().numpy()
+        kp_GT = y.detach().cpu().numpy()
         kp_GT = (kp_GT + 1) / 2 * 256
         kp_GT = np.array(kp_GT).astype(np.int32)
         
         # before adaption
         out = out.view(-1,68,2)
-        kp_b = out.cpu().detach().numpy()
+        kp_b = out.detach().cpu().numpy()
         kp_b = (kp_b + 1) / 2 * 256
         kp_b = np.array(kp_b).astype(np.int32)
         
         # after adaption
         y_hat = y_hat.view(-1,68,2)
-        kp_p = y_hat.cpu().detach().numpy()
+        kp_p = y_hat.detach().cpu().numpy()
         kp_p = (kp_p + 1) / 2 * 256
         kp_p = np.array(kp_p).astype(np.int32)
         
@@ -163,8 +163,8 @@ class Label_adaption(pl.LightningModule):
             imgs_b.append(predict_b)
         
         # NME with normalized keypoint
-        kp_GT = y.cpu().detach().numpy()
-        kp_p = y_hat.cpu().detach().numpy()
+        kp_GT = y.detach().cpu().numpy()
+        kp_p = y_hat.detach().cpu().numpy()
         
         dis = kp_GT - kp_p
         dis = np.sqrt(np.sum(np.power(dis, 2), 2))
@@ -204,7 +204,7 @@ class Label_adaption(pl.LightningModule):
         temp = temp.permute(0, 3, 1, 2)
         grid = make_grid(temp)
         grid = grid.permute(1, 2, 0)
-        grid = grid.cpu().detach().numpy()
+        grid = grid.detach().cpu().numpy()
         images = wandb.Image(grid, caption="GT")
         wandb.log({"GT_test": [images]})
         
@@ -212,7 +212,7 @@ class Label_adaption(pl.LightningModule):
         temp = temp.permute(0, 3, 1, 2)
         grid = make_grid(temp)
         grid = grid.permute(1, 2, 0)
-        grid = grid.cpu().detach().numpy()
+        grid = grid.detach().cpu().numpy()
         images = wandb.Image(grid, caption="Predict_before")
         wandb.log({"predict_before": [images]})
         
@@ -220,7 +220,7 @@ class Label_adaption(pl.LightningModule):
         temp = temp.permute(0, 3, 1, 2)
         grid = make_grid(temp)
         grid = grid.permute(1, 2, 0)
-        grid = grid.cpu().detach().numpy()
+        grid = grid.detach().cpu().numpy()
         images = wandb.Image(grid, caption="Predict_after")
         wandb.log({"predict_after": [images]})
 
@@ -256,6 +256,7 @@ class FaceSynthetics(pl.LightningModule):
         self.beta1 = beta1
         self.beta2 = beta2
         self.momentum = momentum
+        
     def forward(self, x):
         # use forward for inference/predictions
         y = self.backbone(x)
@@ -279,16 +280,37 @@ class FaceSynthetics(pl.LightningModule):
         self.log('train_loss', loss, on_epoch=True)
         return loss
 
+    def _flip_keypoints(self, keypoints):
+        flip_parts = ([1, 17], [2, 16], [3, 15], [4, 14], [5, 13], [6, 12], [7, 11], [8, 10],
+                        [18, 27], [19, 26], [20, 25], [21, 24], [22, 23],
+                        [32, 36], [33, 35],
+                        [37, 46], [38, 45], [39, 44], [40, 43], [41, 48], [42, 47],
+                        [49, 55], [50, 54], [51, 53], [62, 64], [61, 65], [68, 66], [59, 57], [60, 56])
+        keypoints_flip = keypoints.clone()
+        keypoints_flip[:, :, 0] *= -1
+        for pair in flip_parts:
+            tmp = keypoints_flip[:, pair[0] - 1, :].clone()
+            keypoints_flip[:, pair[0] - 1, :] = keypoints_flip[:, pair[1] - 1, :]
+            keypoints_flip[:, pair[1] - 1, :] = tmp
+        return keypoints_flip
+
     def validation_step(self, batch, batch_idx):
         img_o, x, y = batch
-        y_hat = self.backbone(x)
-        y_hat = self.fc(y_hat)
-        
+        img_size = x.shape[2]
+
+        #x_flip = x.clone().flip(dims=(-1,))
+
+        y_hat = self(x)
+        #y_hat_flip = self(x_flip)
+
         y = y.view(-1,68,2)
         y_hat = y_hat.view(-1,68,2)
+        #y_hat_flip = y_hat_flip.view(-1, 68, 2)
         
-        kp_GT = y.cpu().detach().numpy()
-        kp_p = y_hat.cpu().detach().numpy()
+        # y_hat = (y_hat + self._flip_keypoints(y_hat_flip)) / 2
+
+        kp_GT = y.detach().cpu().numpy()
+        kp_p = y_hat.detach().cpu().numpy()
         
         dis = kp_GT - kp_p
         dis = np.sqrt(np.sum(np.power(dis, 2), 2))
@@ -303,18 +325,18 @@ class FaceSynthetics(pl.LightningModule):
         
         # plot result on wandb
         if (batch_idx == 0):
-            img_o = img_o.cpu().detach().numpy()[0]
+            img_o = img_o.detach().cpu().numpy()[0]
             img = np.array(img_o).astype(np.uint8)
-            img = cv2.resize(img, dsize=(256, 256))
+            img = cv2.resize(img, dsize=(img_size, img_size))
             
             # keypoint transform
-            kp_GT = y.cpu().detach().numpy()[0]
-            kp_GT = (kp_GT + 1) / 2 * 256
+            kp_GT = y.detach().cpu().numpy()[0]
+            kp_GT = (kp_GT + 1) / 2 * img_size
             kp_GT = np.array(kp_GT).astype(np.int32)
             GT = plot_keypoints_2(img, kp_GT)
 
-            kp_p = y_hat.cpu().detach().numpy()[0]
-            kp_p = (kp_p + 1) / 2 * 256
+            kp_p = y_hat.detach().cpu().numpy()[0]
+            kp_p = (kp_p + 1) / 2 * img_size
             kp_p = np.array(kp_p).astype(np.int32)
             predict = plot_keypoints_2(img, kp_p)
             images = wandb.Image(GT, caption="GT")
@@ -324,25 +346,36 @@ class FaceSynthetics(pl.LightningModule):
 
     def test_step(self, batch, batch_idx):
         img_o, x, y = batch
-        y_hat = self.backbone(x)
-        y_hat = self.fc(y_hat)
-        
-        img_o = img_o.cpu().detach().numpy()
+        x_flip = x.clone().flip(dims=(-1,))
+
+        y_hat = self(x)
+        y_hat_flip = self(x_flip)
+
+        y = y.view(-1,68,2)
+        y_hat = y_hat.view(-1,68,2)
+        y_hat_flip = y_hat_flip.view(-1, 68, 2)
+
+        y_hat = (y_hat + self._flip_keypoints(y_hat_flip)) / 2
+        #print(y_hat - self._flip_keypoints(y_hat_flip))
+
+        img_size = x.shape[2]
+
+        img_o = img_o.detach().cpu().numpy()
         
         y = y.view(-1,68,2)
-        kp_GT = y.cpu().detach().numpy()
-        kp_GT = (kp_GT + 1) / 2 * 256
+        kp_GT = y.detach().cpu().numpy()
+        kp_GT = (kp_GT + 1) / 2 * img_size
         kp_GT = np.array(kp_GT).astype(np.int32)
         
         y_hat = y_hat.view(-1,68,2)
-        kp_p = y_hat.cpu().detach().numpy()
-        kp_p = (kp_p + 1) / 2 * 256
+        kp_p = y_hat.detach().cpu().numpy()
+        kp_p = (kp_p + 1) / 2 * img_size
         kp_p = np.array(kp_p).astype(np.int32)
         
         imgs_gt, imgs_p = [], []
         for i in range(img_o.shape[0]):
             img = np.array(img_o[i]).astype(np.uint8)
-            img = cv2.resize(img, dsize=(256, 256))
+            img = cv2.resize(img, dsize=(img_size, img_size))
             kp1 = kp_GT[i]
             kp2 = kp_p[i]
             
@@ -352,8 +385,8 @@ class FaceSynthetics(pl.LightningModule):
             imgs_p.append(predict)
         
         # NME with normalized keypoint
-        kp_GT = y.cpu().detach().numpy()
-        kp_p = y_hat.cpu().detach().numpy()
+        kp_GT = y.detach().cpu().numpy()
+        kp_p = y_hat.detach().cpu().numpy()
         
         dis = kp_GT - kp_p
         dis = np.sqrt(np.sum(np.power(dis, 2), 2))
@@ -389,7 +422,7 @@ class FaceSynthetics(pl.LightningModule):
         temp = temp.permute(0, 3, 1, 2)
         grid = make_grid(temp)
         grid = grid.permute(1, 2, 0)
-        grid = grid.cpu().detach().numpy()
+        grid = grid.detach().cpu().numpy()
         images = wandb.Image(grid, caption="GT")
         wandb.log({"GT_test": [images]})
         
@@ -398,7 +431,7 @@ class FaceSynthetics(pl.LightningModule):
         temp = temp.permute(0, 3, 1, 2)
         grid = make_grid(temp)
         grid = grid.permute(1, 2, 0)
-        grid = grid.cpu().detach().numpy()
+        grid = grid.detach().cpu().numpy()
         images = wandb.Image(grid, caption="Predict")
         wandb.log({"predict_test": [images]})
 
@@ -439,7 +472,7 @@ def main(hparams):
         # --- Dataset 
         train_path = osp.join(hparams.dataset_path, 'synthetics_train')
         val_path = osp.join(hparams.dataset_path, 'aflw_val')
-        train_set = FaceDataset(root_dir = train_path, is_train=True, is_coord_enhance = hparams.cood_en)
+        train_set = FaceDataset(root_dir = train_path, is_train=True, is_coord_enhance = hparams.cood_en, is_random_resize_crop = False)
         val_set = FaceDataset(root_dir=val_path, is_train=False, is_coord_enhance = hparams.cood_en)
 
         train_loader = DataLoader(train_set, batch_size=hparams.bs, shuffle=True, num_workers=hparams.num_workers, pin_memory=True, prefetch_factor = 8)
@@ -501,7 +534,7 @@ def main(hparams):
         # --- Dataset 
         train_path = osp.join(hparams.dataset_path, 'synthetics_train')
         val_path = osp.join(hparams.dataset_path, 'aflw_val')
-        train_set = FaceDataset(root_dir = train_path, is_train=True, is_coord_enhance = hparams.cood_en)
+        train_set = FaceDataset(root_dir = train_path, is_train=True, is_coord_enhance = hparams.cood_en, is_random_resize_crop = False)
         val_set = FaceDataset(root_dir=val_path, is_train=False, is_coord_enhance = hparams.cood_en)
 
         train_loader = DataLoader(train_set, batch_size=hparams.bs, shuffle=True, num_workers=hparams.num_workers, pin_memory=True)
