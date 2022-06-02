@@ -1,7 +1,10 @@
 import torchvision
 from .label_adaption import *
+from .models_exp import *
+
 models_dict = {
     'mobilenet_v2' : torchvision.models.mobilenet_v2,
+    'mobilevit_v2' : MobileViTv2,
 }
 
 def model_sel(model_name, num_classes=68*2):
