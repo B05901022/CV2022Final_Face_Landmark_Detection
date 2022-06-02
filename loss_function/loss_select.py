@@ -7,6 +7,7 @@ loss_dict = {
     'Wing': WingLoss(),
     'AdaptWing': AdpativeWingLoss(),
     'SmoothL1': SmoothL1Loss(),
+    'GNLL': GaussianNegativeLogLikelihoodLoss(),
 }
 
 def loss_sel(model_name):
