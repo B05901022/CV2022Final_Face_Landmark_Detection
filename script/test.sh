@@ -6,8 +6,8 @@ ckpt_path=./checkpoints/
 log_path=./log/
 
 # --- Logging Arguments ---
-exp_name=Exp_6_test                      # Name for wand running
-ckpt_name=Exp_6_mbv2_L1_rand_crop_epoch=27-val_loss=0.0279.ckpt              # name of check point (Used when testing)
+exp_name=Exp_8_test                      # Name for wand running
+ckpt_name=Exp_8_mbv2_L1_rand_cutout_epoch=22-val_loss=0.0283.ckpt              # name of check point (Used when testing)
 
 # --- Training Hyperparameters ---
 epoch=30                         
@@ -24,13 +24,14 @@ seed=7
 num_workers=4
 gpu=3                               # Which gpu you want to use
 
-backbone=mobilenet_v2               # Model backbone
+backbone=mobilenet_v2               # Model backbone, mobilevit_v2, mobilenet_v2
 
 wandb login
 
 
 if $cood_en; then
   python main.py \
+    --backbone ${backbone} \
     --dataset_path ${dataset_path} \
     --ckpt_path ${ckpt_path} \
     --log_path ${log_path} \
@@ -52,6 +53,7 @@ if $cood_en; then
 
 else
   python main.py \
+    --backbone ${backbone} \
     --dataset_path ${dataset_path} \
     --ckpt_path ${ckpt_path} \
     --log_path ${log_path} \

@@ -51,11 +51,11 @@ class FaceDataset(Dataset):
                         border_mode=cv2.BORDER_CONSTANT, value=0, mask_value=0, p=0.8),
                     A.HorizontalFlip(p=0.5),
                     RectangleBorderAugmentation(limit=0.33, fill_value=0, p=0.2),
+                    A.Cutout(num_holes = 1, max_h_size = 64, max_w_size = 64),
                 ]
         transform_list += \
             [
                 A.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5], always_apply = True),
-                A.Cutout(),
                 ToTensorV2(),
             ]
         self.transform = A.ReplayCompose(

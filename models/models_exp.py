@@ -246,7 +246,7 @@ class MobileViTBlockv2(nn.Module):
 
 class MobileViTv2(nn.Module):
     """Code rewriten from apple/ml-cvnets"""
-    def __init__(self, in_channels=3, width_multiplier=0.5, num_classes=136):
+    def __init__(self, in_channels=3, width_multiplier=0.75, num_classes=136):
         super().__init__()
         
         # --- Stem ---
