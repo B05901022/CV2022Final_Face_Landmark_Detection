@@ -6,7 +6,7 @@ ckpt_path=./checkpoints/
 log_path=./log/
 
 # --- Logging Arguments ---
-exp_name=Exp_11_mbvitv2_0.75_L1_rand_cutout_64_1                      # Name for wand running
+exp_name=Exp_12_mbvitv2_0.75_L1_rand_cutout_64_1_cooden                      # Name for wand running
 ckpt_name=default_ckpt              # name of check point (Used when testing)
 
 # --- Training Hyperparameters ---
@@ -18,11 +18,11 @@ beta1=0.9                           # if use Adam, beta would be used
 beta2=0.999
 momentum=0.9                        # For SGD
 bs=50                               # Batch size
-cood_en=false                       # Coordinate enhancement, 
+cood_en=true                       # Coordinate enhancement, 
 seed=7
 # --- GPU/CPU Arguments ---
 num_workers=4
-gpu=3                               # Which gpu you want to use
+gpu="0,1"                               # Which gpu you want to use
 
 
 backbone=mobilevit_v2               # Model backbone   , mobilevit_v2, mobilenet_v2
@@ -50,7 +50,7 @@ if ${cood_en}; then
     --num_workers ${num_workers} \
     --gpu ${gpu} \
     --train ${train}\
-    --cood_en ${cood_en}\
+    --cood_en \
     
 else
   python main.py \
@@ -71,7 +71,7 @@ else
     --seed ${seed} \
     --num_workers ${num_workers} \
     --gpu ${gpu} \
-    --train ${train}
+    --train ${train}\
     
 fi
 

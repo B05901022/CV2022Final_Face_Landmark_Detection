@@ -240,10 +240,10 @@ class Label_adaption(pl.LightningModule):
         return [opt], [lr_scheduler]
 
 class FaceSynthetics(pl.LightningModule):
-    def __init__(self, backbone, fc_extend, loss_func, lr, wd, beta1 = 0.9, beta2 = 0.999, momentum = 0.9):
+    def __init__(self, backbone, fc_extend, loss_func, lr, wd, beta1 = 0.9, beta2 = 0.999, momentum = 0.9, cood_en=False):
         super().__init__()
         self.save_hyperparameters()
-        self.backbone = model_sel(backbone)
+        self.backbone = model_sel(backbone, cood_en=cood_en)
         self.fc = self.backbone.classifier
         if fc_extend :
             self.fc[1] = nn.Linear(self.fc[1].in_features, 68*3)
@@ -441,10 +441,15 @@ class FaceSynthetics(pl.LightningModule):
 
         opt = torch.optim.SGD(self.parameters(), lr = self.lr, momentum=self.momentum, weight_decay = self.wd)
 
-        def lr_step_func(epoch):
-            return 0.1 ** len([m for m in [15, 25, 28] if m <= epoch])
-        scheduler = torch.optim.lr_scheduler.LambdaLR(
-                optimizer=opt, lr_lambda=lr_step_func)
+        #def lr_step_func(epoch):
+        #    return 0.1 ** len([m for m in [15, 25, 28] if m <= epoch])
+        #scheduler = torch.optim.lr_scheduler.LambdaLR(
+        #        optimizer=opt, lr_lambda=lr_step_func)
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(
+            optimizer=opt,
+            milestones=[15,25,28],
+            gamma=0.1,
+            )
         lr_scheduler = {
                 'scheduler': scheduler,
                 'name': 'learning_rate',
@@ -479,7 +484,17 @@ def main(hparams):
         val_loader = DataLoader(val_set, batch_size=hparams.bs, shuffle=False)
 
         # --- Model instantiation ---
-        model = FaceSynthetics(backbone=hparams.backbone, fc_extend = hparams.fc_extend, loss_func = hparams.loss, lr = hparams.lr, wd = hparams.wd, beta1 = hparams.beta1, beta2 = hparams.beta2, momentum = hparams.momentum)
+        model = FaceSynthetics(
+            backbone=hparams.backbone,
+             fc_extend = hparams.fc_extend,
+              loss_func = hparams.loss, 
+              lr = hparams.lr, 
+              wd = hparams.wd, 
+              beta1 = hparams.beta1, 
+              beta2 = hparams.beta2, 
+              momentum = hparams.momentum,
+              cood_en = hparams.cood_en,
+              )
         # --- Fit model to trainer ---
         checkpoint_callback = ModelCheckpoint(
             monitor = 'val_loss',
@@ -493,8 +508,9 @@ def main(hparams):
         lr_monitor = LearningRateMonitor(logging_interval='step')
 
         trainer = pl.Trainer(
-            devices = [hparams.gpu],
+            devices = hparams.gpu,
             accelerator="gpu",
+            strategy = "ddp" if len(hparams.gpu) > 1 else None,
             benchmark=True,
             logger = logger,
             callbacks=[checkpoint_callback, lr_monitor],
@@ -520,8 +536,9 @@ def main(hparams):
         test_loader = DataLoader(test_set, batch_size=hparams.bs, shuffle=False)
 
         trainer = pl.Trainer(
-            devices = [hparams.gpu],
+            devices = hparams.gpu,
             accelerator="gpu",
+            strategy = "ddp" if len(hparams.gpu) > 1 else None,
             logger = logger,
         )
         trainer.test(model, dataloaders=test_loader)
@@ -543,7 +560,7 @@ def main(hparams):
         # --- Model instantiation ---
         ckpt = osp.join(hparams.ckpt_path, hparams.ckpt_name)
         model_stage1 = FaceSynthetics.load_from_checkpoint(ckpt)
-        #device = torch.device('cuda:{}'.format(hparams.gpu))
+        #device = torch.device('cuda:{}'.formathparams.gpu)
         #model_stage1 = model_stage1.to(device)
         model = Label_adaption(backbone=hparams.adap_backbone, loss_func = hparams.loss, up_scale = hparams.up_scale,stage_1_model = model_stage1, \
                 lr = hparams.lr, wd = hparams.wd, beta1 = hparams.beta1, beta2 = hparams.beta2, momentum = hparams.momentum)
@@ -561,8 +578,9 @@ def main(hparams):
         lr_monitor = LearningRateMonitor(logging_interval='step')
 
         trainer = pl.Trainer(
-            devices = [hparams.gpu],
+            devices = hparams.gpu,
             accelerator="gpu",
+            strategy = "ddp" if len(hparams.gpu) > 1 else None,
             benchmark=True,
             logger = logger,
             callbacks=[checkpoint_callback, lr_monitor],
@@ -584,8 +602,9 @@ def main(hparams):
         test_loader = DataLoader(test_set, batch_size=hparams.bs, shuffle=False)
 
         trainer = pl.Trainer(
-            devices = [hparams.gpu],
+            devices = hparams.gpu,
             accelerator="gpu",
+            strategy = "ddp" if len(hparams.gpu) > 1 else None,
             logger = logger,
         )
         trainer.test(model, dataloaders=test_loader)
@@ -630,7 +649,7 @@ if __name__ == "__main__":
 
     # --- GPU/CPU Arguments ---
     parser.add_argument('--num_workers', help='Number of workers', default=4, type=int)
-    parser.add_argument('--gpu', help='Which GPU to be used (if none, specify as -1).', type=int, default = 3)
+    parser.add_argument('--gpu', help='Which GPU to be used (if none, specify as -1).', type=str, default = 3)
 
     # --- Mode ---
     parser.add_argument('--train', help='Run in train mode.', action='store_true')
@@ -641,5 +660,13 @@ if __name__ == "__main__":
 
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
+
+    # --- Parse GPU device ---
+    if ',' in args.gpu:
+        args.gpu = [int(i) for i in args.gpu.split(',')]
+    else:
+        args.gpu = [int(args.gpu)]
+
+    wandb.init()
     main(args)
     wandb.finish()
