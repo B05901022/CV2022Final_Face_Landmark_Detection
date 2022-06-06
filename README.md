@@ -52,3 +52,9 @@
 - 
 # Todos
 1. Generate solution.txt for label adaption
+
+
+## 06/06 -- update by YS
+- [Mobilenet_v2_CA](https://github.com/Andrew-Qibin/CoordAttention)
+- In models folder
+    - models_mobilenet_v2_ca.py : Mobilenet_v2 with coordinate attention
