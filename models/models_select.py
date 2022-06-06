@@ -2,10 +2,14 @@ import torchvision
 import torch.nn as nn
 from .label_adaption import *
 from .models_exp import *
+from .mobilenext_v3_CMAB import *
+from .mobilenet_v2_CBAM import *
+from .models_mobilenet_v2_ca import *
 
 models_dict = {
     'mobilenet_v2' : torchvision.models.mobilenet_v2,
     'mobilevit_v2' : MobileViTv2,
+    'mobilenet_v2_ca' : MBV2_CA,
 }
 
 def model_sel(model_name, num_classes=68*2, cood_en=False):
