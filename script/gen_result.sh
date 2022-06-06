@@ -6,8 +6,8 @@ ckpt_path=./checkpoints/
 log_path=./log/
 
 # --- Logging Arguments ---
-exp_name=Exp_6                      # Name for wand running
-ckpt_name=Exp_6_mbv2_L1_rand_crop_epoch=27-val_loss=0.0279.ckpt              # name of check point (Used when testing)
+exp_name=Exp_14                      # Name for wand running
+ckpt_name=Exp_14_mbnetv2_L1_rand_fullres_epoch=25-val_loss=0.0277.ckpt              # name of check point (Used when testing)
 
 # --- Training Hyperparameters ---
 epoch=30                         
@@ -22,7 +22,7 @@ cood_en=false                       # Coordinate enhancement,
 seed=7
 # --- GPU/CPU Arguments ---
 num_workers=4
-gpu=3                               # Which gpu you want to use
+gpu="0,1"                               # Which gpu you want to use
 
 
 backbone=mobilenet_v2               # Model backbone

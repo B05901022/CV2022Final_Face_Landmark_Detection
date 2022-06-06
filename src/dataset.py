@@ -16,7 +16,7 @@ from PIL import Image
 import copy
 
 class FaceDataset(Dataset):
-    def __init__(self, root_dir, is_train, is_coord_enhance = False, is_random_resize_crop = False):
+    def __init__(self, root_dir, is_train, is_coord_enhance = False, is_random_resize_crop = False, input_resolution = None):
         super(FaceDataset, self).__init__()
 
         #self.local_rank = local_rank
@@ -25,14 +25,17 @@ class FaceDataset(Dataset):
         self.is_train = is_train
         self.is_coord_enhance = is_coord_enhance
 
-        if is_random_resize_crop:
+        if input_resolution is None:
             self.input_size = 256
+        else:
+            self.input_size = input_resolution
+
+        if is_random_resize_crop:
             transform_list = [
                 # A.geometric.resize.Resize(self.input_size, self.input_size, interpolation=cv2.INTER_LINEAR, always_apply=True),
                 A.augmentations.crops.transforms.RandomResizedCrop(self.input_size, self.input_size, always_apply=True)
             ]
         else:
-            self.input_size = 256
             transform_list = [
                 A.geometric.resize.Resize(self.input_size, self.input_size, interpolation=cv2.INTER_LINEAR, always_apply=True),
             ]
@@ -51,7 +54,7 @@ class FaceDataset(Dataset):
                         border_mode=cv2.BORDER_CONSTANT, value=0, mask_value=0, p=0.8),
                     A.HorizontalFlip(p=0.5),
                     RectangleBorderAugmentation(limit=0.33, fill_value=0, p=0.2),
-                    A.Cutout(num_holes = 1, max_h_size = 64, max_w_size = 64),
+                    #A.Cutout(num_holes = 1, max_h_size = 64, max_w_size = 64),
                 ]
         transform_list += \
             [

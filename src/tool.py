@@ -20,9 +20,14 @@ def fixed_seed(myseed):
         torch.cuda.manual_seed_all(myseed)
         torch.cuda.manual_seed(myseed)
 
-def gen_result_data(model, path):
+def gen_result_data(model, path, input_resolution = None):
+    if input_resolution is None:
+        img_size = 256
+    else: 
+        img_size = input_resolution
+
     transform = A.ReplayCompose(
-        [A.geometric.resize.Resize(256, 256, interpolation=cv2.INTER_LINEAR),
+        [A.geometric.resize.Resize(img_size, img_size, interpolation=cv2.INTER_LINEAR),
         A.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
         ToTensorV2()]
     )

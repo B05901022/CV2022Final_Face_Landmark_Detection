@@ -24,6 +24,7 @@ import cv2
 from models.models_select import model_sel, adapt_sel, fc_sel
 from loss_function.loss_select import loss_sel
 from src.tool import gen_result_data
+from src.custom_optimizer import SAM
 
 def plot_keypoints_2(img, keypoints):
     img = copy.deepcopy(img)
@@ -240,7 +241,7 @@ class Label_adaption(pl.LightningModule):
         return [opt], [lr_scheduler]
 
 class FaceSynthetics(pl.LightningModule):
-    def __init__(self, backbone, fc_extend, loss_func, lr, wd, beta1 = 0.9, beta2 = 0.999, momentum = 0.9, cood_en=False):
+    def __init__(self, backbone, fc_extend, loss_func, lr, wd, beta1 = 0.9, beta2 = 0.999, momentum = 0.9, cood_en=False, use_sam=False):
         super().__init__()
         self.save_hyperparameters()
         self.backbone = model_sel(backbone, cood_en=cood_en)
@@ -256,6 +257,7 @@ class FaceSynthetics(pl.LightningModule):
         self.beta1 = beta1
         self.beta2 = beta2
         self.momentum = momentum
+        self.use_sam = use_sam
         
     def forward(self, x):
         # use forward for inference/predictions
@@ -277,6 +279,16 @@ class FaceSynthetics(pl.LightningModule):
             loss = torch.mean(loss) * 5.0
         else:
             loss = self.loss(y_hat, y) * 5.0
+
+        if self.use_sam:
+            optimizer = self.optimizers()
+            self.manual_backward(loss, optimizer)
+            optimizer.first_step(zero_grad=True)
+
+            loss2 = self.loss(y_hat, y) * 5.0
+            self.manual_backward(loss2, optimizer)
+            optimizer.second_step(zero_grad=True)
+
         self.log('train_loss', loss, on_epoch=True)
         return loss
 
@@ -439,7 +451,11 @@ class FaceSynthetics(pl.LightningModule):
         
         # opt = torch.optim.Adam(self.parameters(), lr = self.lr, betas = (self.beta1, self.beta2), weight_decay = self.wd)
 
-        opt = torch.optim.SGD(self.parameters(), lr = self.lr, momentum=self.momentum, weight_decay = self.wd)
+        if self.use_sam:
+            base_optimizer = torch.optim.SGD
+            opt = SAM(self.parameters(), base_optimizer, lr = self.lr, momentum=self.momentum, weight_decay = self.wd)
+        else:
+            opt = torch.optim.SGD(self.parameters(), lr = self.lr, momentum=self.momentum, weight_decay = self.wd)
 
         #def lr_step_func(epoch):
         #    return 0.1 ** len([m for m in [15, 25, 28] if m <= epoch])
@@ -465,7 +481,7 @@ def main(hparams):
     pl.seed_everything(hparams.seed)
     # -- Logger instantiation ---
     logger = WandbLogger(project="cv_final~~~", name = hparams.exp_name, entity = 'cv_final')
-    #wandb.init()
+    wandb.init(**logger._wandb_init)
     #logger = TensorBoardLogger(hparams.log_path)
     # --- Trainer instantiation ---
 
@@ -477,8 +493,8 @@ def main(hparams):
         # --- Dataset 
         train_path = osp.join(hparams.dataset_path, 'synthetics_train')
         val_path = osp.join(hparams.dataset_path, 'aflw_val')
-        train_set = FaceDataset(root_dir = train_path, is_train=True, is_coord_enhance = hparams.cood_en, is_random_resize_crop = False)
-        val_set = FaceDataset(root_dir=val_path, is_train=False, is_coord_enhance = hparams.cood_en)
+        train_set = FaceDataset(root_dir = train_path, is_train=True, is_coord_enhance = hparams.cood_en, is_random_resize_crop = False, input_resolution=384)
+        val_set = FaceDataset(root_dir=val_path, is_train=False, is_coord_enhance = hparams.cood_en, input_resolution=384)
 
         train_loader = DataLoader(train_set, batch_size=hparams.bs, shuffle=True, num_workers=hparams.num_workers, pin_memory=True, prefetch_factor = 8)
         val_loader = DataLoader(val_set, batch_size=hparams.bs, shuffle=False)
@@ -494,6 +510,7 @@ def main(hparams):
               beta2 = hparams.beta2, 
               momentum = hparams.momentum,
               cood_en = hparams.cood_en,
+              use_sam = hparams.use_sam,
               )
         # --- Fit model to trainer ---
         checkpoint_callback = ModelCheckpoint(
@@ -532,7 +549,7 @@ def main(hparams):
         model = FaceSynthetics.load_from_checkpoint(ckpt)
         # --- Fit testing ---
         test_path = osp.join(hparams.dataset_path, 'aflw_val')
-        test_set = FaceDataset(root_dir=test_path, is_train=False, is_coord_enhance = hparams.cood_en)
+        test_set = FaceDataset(root_dir=test_path, is_train=False, is_coord_enhance = hparams.cood_en, input_resolution=384)
         test_loader = DataLoader(test_set, batch_size=hparams.bs, shuffle=False)
 
         trainer = pl.Trainer(
@@ -613,7 +630,7 @@ def main(hparams):
         ckpt = osp.join(hparams.ckpt_path, hparams.ckpt_name)
         model = FaceSynthetics.load_from_checkpoint(ckpt)
         test_path = osp.join(hparams.dataset_path, 'aflw_test')
-        gen_result_data(model = model, path = test_path)
+        gen_result_data(model = model, path = test_path, input_resolution=384)
         
 
 if __name__ == "__main__":
@@ -645,6 +662,7 @@ if __name__ == "__main__":
     parser.add_argument('--momentum', help='momentum', default=0.9, type=float)
     parser.add_argument('--bs', help='Batch size.', default=50, type=int)
     parser.add_argument('--cood_en', help='Append coordinate information', action='store_true')
+    parser.add_argument('--use_sam', help='Use sharpness-aware minimization (SAM) optimizer (second-order optimization).', action='store_true')
     parser.add_argument('--seed', help='Random seed.', default=7, type=int)
 
     # --- GPU/CPU Arguments ---
@@ -667,6 +685,6 @@ if __name__ == "__main__":
     else:
         args.gpu = [int(args.gpu)]
 
-    wandb.init()
+    #wandb.init()
     main(args)
     wandb.finish()

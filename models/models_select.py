@@ -13,7 +13,14 @@ def model_sel(model_name, num_classes=68*2, cood_en=False):
 
     if model_name == 'mobilenet_v2':
         model = models_dict[model_name](num_classes=num_classes)
-        model.features[0][0].in_channels = in_channels
+        model.features[0][0] = nn.Conv2d(
+            in_channels=in_channels,
+            out_channels=32,
+            kernel_size=3,
+            stride=2,
+            padding=(1,1),
+            bias=False,
+            )
         nn.init.kaiming_normal_(model.features[0][0].weight, mode='fan_out')
     else:
         model = models_dict[model_name](in_channels=in_channels, num_classes=num_classes)
