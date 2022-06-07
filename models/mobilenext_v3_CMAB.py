@@ -5,14 +5,33 @@ from torch import nn, Tensor
 from torch.nn import functional as F
 from typing import Any, Callable, Dict, List, Optional, Sequence
 
-from torchvision.models.utils import load_state_dict_from_url
-from torchvision.models.mobilenet import _make_divisible #ConvBNReLU
+#from torchvision.models.utils import load_state_dict_from_url
+#from torchvision.models.mobilenet import _make_divisible #ConvBNReLU
 import numpy as np
 from torch.nn import init
 
 
 __all__ = ["MobileNetV3", "mobilenet_v3_large", "mobilenet_v3_small"]
 
+
+def _make_divisible(v, divisor, min_value=None):
+    """
+    This function is taken from the original tf repo.
+    It ensures that all layers have a channel number that is divisible by 8
+    It can be seen here:
+    https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet/mobilenet.py
+    :param v:
+    :param divisor:
+    :param min_value:
+    :return:
+    """
+    if min_value is None:
+        min_value = divisor
+    new_v = max(min_value, int(v + divisor / 2) // divisor * divisor)
+    # Make sure that round down does not go down by more than 10%.
+    if new_v < 0.9 * v:
+        new_v += divisor
+    return new_v
 
 class ChannelAttention(nn.Module):
     def __init__(self,channel,reduction=16):

@@ -241,7 +241,7 @@ class Label_adaption(pl.LightningModule):
         return [opt], [lr_scheduler]
 
 class FaceSynthetics(pl.LightningModule):
-    def __init__(self, backbone, fc_extend, loss_func, lr, wd, beta1 = 0.9, beta2 = 0.999, momentum = 0.9, cood_en=False, use_sam=False):
+    def __init__(self, backbone, fc_extend, loss_func, lr, wd, beta1 = 0.9, beta2 = 0.999, momentum = 0.9, cood_en=False, use_sam=False, is_ddp=False):
         super().__init__()
         self.save_hyperparameters()
         self.backbone = model_sel(backbone, cood_en=cood_en)
@@ -258,7 +258,10 @@ class FaceSynthetics(pl.LightningModule):
         self.beta2 = beta2
         self.momentum = momentum
         self.use_sam = use_sam
-        
+        self.is_ddp = is_ddp
+        if self.use_sam:
+            self.automatic_optimization = False
+
     def forward(self, x):
         # use forward for inference/predictions
         y = self.backbone(x)
@@ -282,11 +285,17 @@ class FaceSynthetics(pl.LightningModule):
 
         if self.use_sam:
             optimizer = self.optimizers()
-            self.manual_backward(loss, optimizer)
+            if self.is_ddp:
+                with self.trainer.model.no_sync():
+                    self.manual_backward(loss)
+            else:
+                self.manual_backward(loss)
             optimizer.first_step(zero_grad=True)
 
+            y_hat = self.backbone(x)
+            y_hat = self.fc(y_hat)
             loss2 = self.loss(y_hat, y) * 5.0
-            self.manual_backward(loss2, optimizer)
+            self.manual_backward(loss2)
             optimizer.second_step(zero_grad=True)
 
         self.log('train_loss', loss, on_epoch=True)
@@ -511,6 +520,7 @@ def main(hparams):
               momentum = hparams.momentum,
               cood_en = hparams.cood_en,
               use_sam = hparams.use_sam,
+              is_ddp = len(hparams.gpu) > 1,
               )
         # --- Fit model to trainer ---
         checkpoint_callback = ModelCheckpoint(
