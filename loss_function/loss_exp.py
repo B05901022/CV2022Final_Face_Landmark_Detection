@@ -71,16 +71,12 @@ class GaussianNegativeLogLikelihoodLoss(nn.Module):
     def __init__(self, num_keypoints: int = 68):
         super().__init__()
         self.num_keypoints = num_keypoints
-        self.keypoint_weight = nn.Parameter(torch.Tensor([[1. for _ in range(num_keypoints)]]), requires_grad=True)
+        self.keypoint_weight = nn.Parameter(torch.Tensor([[10. for _ in range(num_keypoints)]]), requires_grad=True)
         
-    def forward(self, pred, target):
-        assert pred.shape[1:] == (self.num_keypoints*3), f'pred has incorrect shape of {pred.shape}, expected to be (batch, {self.num_keypoints*2})'
-        assert target.shape[1:] == (self.num_keypoints*2), f'target has incorrect shape of {target.shape}, expected to be (batch, {self.num_keypoints*2})'
-        pred_landmark = pred.clone().view(-1,self.num_keypoints,3)
-        log_sigmas = pred_landmark[:,:,-1] # (b,kps)
-        pred_landmark = pred_landmark[:,:,:2]
-        target_landmark = target.clone().view(-1,self.num_keypoints,2)
-        loss_mu = torch.pow(pred_landmark - target_landmark,2).sum(dim=-1) # (b,kps)
+    def forward(self, pred, target, log_sigmas):
+        pred_landmark = pred.view(-1,self.num_keypoints,2)
+        target_landmark = target.view(-1,self.num_keypoints,2)
+        loss_mu = (pred_landmark - target_landmark).abs().sum(dim=-1) # (b,kps)
         loss_mu /= 2*torch.pow(log_sigmas.exp(),2) # (b,kps)
-        loss_sigma = 2*log_sigmas # (b,kps)
-        return ( self.keypoint_weight * (loss_sigma + loss_mu) ).sum(dim=-1)
+        loss_sigma = 2*log_sigmas.abs() # (b,kps)
+        return ( nn.functional.sigmoid(self.keypoint_weight) * (loss_sigma + loss_mu) ).mean(dim=-1).mean()

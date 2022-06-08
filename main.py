@@ -250,8 +250,8 @@ class FaceSynthetics(pl.LightningModule):
             self.fc[1] = nn.Linear(self.fc[1].in_features, 68*3)
         self.backbone.classifier = nn.Identity()
         self.loss = loss_sel(loss_func)
+        self.val_loss = loss_sel('L1')
 
-        self.hard_mining = False
         self.lr = lr
         self.wd = wd
         self.beta1 = beta1
@@ -261,6 +261,9 @@ class FaceSynthetics(pl.LightningModule):
         self.is_ddp = is_ddp
         if self.use_sam:
             self.automatic_optimization = False
+        self.use_gnll = loss_func == 'GNLL'
+        if self.use_gnll:
+            self.prob_fc = nn.Linear(self.fc[1].in_features, 68)
 
     def forward(self, x):
         # use forward for inference/predictions
@@ -271,16 +274,12 @@ class FaceSynthetics(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self.backbone(x)
-        y_hat = self.fc(y_hat)
-        if self.hard_mining:
-            loss = torch.abs(y_hat - y) #(B,K)
-            loss = torch.mean(loss, dim=1) #(B,)
-            B = len(loss)
-            S = int(B*0.5)
-            loss, _ = torch.sort(loss, descending=True)
-            loss = loss[:S]
-            loss = torch.mean(loss) * 5.0
+        if self.use_gnll:
+            y_prob_hat = self.prob_fc(y_hat)
+            y_hat = self.fc(y_hat)
+            loss = self.loss(y_hat, y, y_prob_hat) * 5.0
         else:
+            y_hat = self.fc(y_hat)
             loss = self.loss(y_hat, y) * 5.0
 
         if self.use_sam:
@@ -293,8 +292,13 @@ class FaceSynthetics(pl.LightningModule):
             optimizer.first_step(zero_grad=True)
 
             y_hat = self.backbone(x)
-            y_hat = self.fc(y_hat)
-            loss2 = self.loss(y_hat, y) * 5.0
+            if self.use_gnll:
+                y_prob_hat = self.prob_fc(y_hat)
+                y_hat = self.fc(y_hat)
+                loss2 = self.loss(y_hat, y, y_prob_hat) * 5.0
+            else:
+                y_hat = self.fc(y_hat)
+                loss2 = self.loss(y_hat, y) * 5.0
             self.manual_backward(loss2)
             optimizer.second_step(zero_grad=True)
 
@@ -339,7 +343,7 @@ class FaceSynthetics(pl.LightningModule):
         NME = dis / 2 * 100
         
         # calculate loss
-        loss = self.loss(y_hat, y)
+        loss = self.val_loss(y_hat, y)
         self.log('val_loss', loss, on_step=True)
         self.log('val_NME %', NME, on_step=True)
         
