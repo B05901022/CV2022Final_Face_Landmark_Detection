@@ -16,14 +16,15 @@ from PIL import Image
 import copy
 
 class FaceDataset(Dataset):
-    def __init__(self, root_dir, is_train, is_coord_enhance = False, is_random_resize_crop = False, input_resolution = None):
+    def __init__(self, root_dir, is_train, is_coord_enhance = False, is_random_resize_crop = False, input_resolution = None, is_test = False):
         super(FaceDataset, self).__init__()
 
         #self.local_rank = local_rank
         self.is_train = is_train
         self.num_kps = 68
-        self.is_train = is_train
+        self.is_test = is_test
         self.is_coord_enhance = is_coord_enhance
+        self.shift = [-6, -3, 0, 3, 6]
 
         if input_resolution is None:
             self.input_size = 256
@@ -133,9 +134,23 @@ class FaceDataset(Dataset):
             rr = torch.sqrt(xx * xx + yy * yy)
             img = torch.cat((img, xx, yy, rr), dim = 0)
         
+        shift_imgs = None
+        if (self.is_test):
+            for x_shift in self.shift:
+                for y_shift in self.shift:
+                    temp = transforms.functional.affine(img = img.clone(), translate = [x_shift, y_shift], shear = 0, scale = 1, resample = False, fillcolor = [0, 0, 0], angle = 0)
+
+                    if (shift_imgs is None):
+                        shift_imgs = temp
+                    else :
+                        shift_imgs = torch.cat((shift_imgs, temp))
+            shift_imgs = shift_imgs.view(25, 3, self.input_size, self.input_size)
+
         if self.is_train:
                 return img, label
+        elif self.is_test : 
+            return img_o, shift_imgs, label,
         else:
-                return img_o, img, label, 
+            return img_o, img, label, 
     def __len__(self):
         return len(self.X)

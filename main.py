@@ -371,19 +371,36 @@ class FaceSynthetics(pl.LightningModule):
 
     def test_step(self, batch, batch_idx):
         img_o, x, y = batch
+        batch_size = x.shape[0]
+        device = x.get_device()
+
         x_flip = x.clone().flip(dims=(-1,))
 
-        y_hat = self(x)
-        y_hat_flip = self(x_flip)
+        y_acc = torch.zeros((batch_size, 68, 2)).to(device)
 
-        y = y.view(-1,68,2)
-        y_hat = y_hat.view(-1,68,2)
-        y_hat_flip = y_hat_flip.view(-1, 68, 2)
+        if (len(x.shape) == 5):
+            for _idx in range(x.shape[1]):
+                y_hat = self(x[:, _idx, :, :, :])
+                y_hat_flip = self(x_flip[:, _idx, :, :, :])
 
-        y_hat = (y_hat + self._flip_keypoints(y_hat_flip)) / 2
-        #print(y_hat - self._flip_keypoints(y_hat_flip))
+                y = y.view(-1,68,2)
+                y_hat = y_hat.view(-1,68,2)
+                y_hat_flip = y_hat_flip.view(-1, 68, 2)
+                y_acc += y_hat
+                y_acc += self._flip_keypoints(y_hat_flip)
 
-        img_size = x.shape[2]
+            y_hat = y_acc / (2 * x.shape[1])
+        else :
+            y_hat = self(x)
+            y_hat_flip = self(x_flip)
+
+            y = y.view(-1,68,2)
+            y_hat = y_hat.view(-1,68,2)
+            y_hat_flip = y_hat_flip.view(-1, 68, 2)
+
+            y_hat = (y_hat + self._flip_keypoints(y_hat_flip)) / 2
+
+        img_size = x.shape[3]
 
         img_o = img_o.detach().cpu().numpy()
         
@@ -506,8 +523,8 @@ def main(hparams):
         # --- Dataset 
         train_path = osp.join(hparams.dataset_path, 'synthetics_train')
         val_path = osp.join(hparams.dataset_path, 'aflw_val')
-        train_set = FaceDataset(root_dir = train_path, is_train=True, is_coord_enhance = hparams.cood_en, is_random_resize_crop = False, input_resolution=384)
-        val_set = FaceDataset(root_dir=val_path, is_train=False, is_coord_enhance = hparams.cood_en, input_resolution=384)
+        train_set = FaceDataset(root_dir = train_path, is_train=True, is_coord_enhance = hparams.cood_en, is_random_resize_crop = False, input_resolution=256)
+        val_set = FaceDataset(root_dir=val_path, is_train=False, is_coord_enhance = hparams.cood_en, input_resolution=256)
 
         train_loader = DataLoader(train_set, batch_size=hparams.bs, shuffle=True, num_workers=hparams.num_workers, pin_memory=True, prefetch_factor = 8)
         val_loader = DataLoader(val_set, batch_size=hparams.bs, shuffle=False)
@@ -563,7 +580,7 @@ def main(hparams):
         model = FaceSynthetics.load_from_checkpoint(ckpt)
         # --- Fit testing ---
         test_path = osp.join(hparams.dataset_path, 'aflw_val')
-        test_set = FaceDataset(root_dir=test_path, is_train=False, is_coord_enhance = hparams.cood_en, input_resolution=384)
+        test_set = FaceDataset(root_dir=test_path, is_train=False, is_coord_enhance = hparams.cood_en, input_resolution=256, is_test = True)
         test_loader = DataLoader(test_set, batch_size=hparams.bs, shuffle=False)
 
         trainer = pl.Trainer(
@@ -644,7 +661,7 @@ def main(hparams):
         ckpt = osp.join(hparams.ckpt_path, hparams.ckpt_name)
         model = FaceSynthetics.load_from_checkpoint(ckpt)
         test_path = osp.join(hparams.dataset_path, 'aflw_test')
-        gen_result_data(model = model, path = test_path, input_resolution=384)
+        gen_result_data(model = model, path = test_path, devices = hparams.gpu, input_resolution=256)
         
 
 if __name__ == "__main__":
