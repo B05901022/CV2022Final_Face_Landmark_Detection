@@ -583,7 +583,7 @@ def main(hparams):
         model = FaceSynthetics.load_from_checkpoint(ckpt)
         # --- Fit testing ---
         test_path = osp.join(hparams.dataset_path, 'aflw_val')
-        test_set = FaceDataset(root_dir=test_path, is_train=False, is_coord_enhance = hparams.cood_en, input_resolution=384, is_test = False)
+        test_set = FaceDataset(root_dir=test_path, is_train=False, is_coord_enhance = hparams.cood_en, input_resolution=384, use_25shift = hparams.use_shift)
         test_loader = DataLoader(test_set, batch_size=hparams.bs, shuffle=False)
 
         trainer = pl.Trainer(
@@ -666,7 +666,7 @@ def main(hparams):
         ckpt = osp.join(hparams.ckpt_path, hparams.ckpt_name)
         model = FaceSynthetics.load_from_checkpoint(ckpt)
         test_path = osp.join(hparams.dataset_path, 'aflw_test')
-        gen_result_data(model = model, path = test_path, devices = hparams.gpu, input_resolution=384, use_shift = True)
+        gen_result_data(model = model, path = test_path, devices = hparams.gpu, input_resolution=384, use_shift = hparams.use_shift)
         
 
 if __name__ == "__main__":
@@ -714,6 +714,7 @@ if __name__ == "__main__":
     parser.add_argument('--adaption_train', help='Run in test mode.', action='store_true')
     parser.add_argument('--adaption_test', help='Run in test mode.', action='store_true')
     parser.add_argument('--test_file', help='Generate testing data.', action='store_true')
+    parser.add_argument('--use_shift', help='Use 25 shifted image.', action='store_true')
 
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()

@@ -6,8 +6,8 @@ ckpt_path=./checkpoints/
 log_path=./log/
 
 # --- Logging Arguments ---
-exp_name=Exp_Mobilevit_FullRes                      # Name for wand running
-ckpt_name=Exp_14_mbnetv2_L1_rand_fullres_epoch=25-val_loss=0.0277.ckpt             # name of check point (Used when testing)
+exp_name=Exp_23_25shift_val                      # Name for wand running
+ckpt_name=Exp_23_mbnetv2_L1_rand_fullres_sam_60ep_epoch56-val_loss0.0256.ckpt             # name of check point (Used when testing)
 
 # --- Training Hyperparameters ---
 epoch=30                         
@@ -21,15 +21,16 @@ bs=50                               # Batch size
 seed=7
 # --- GPU/CPU Arguments ---
 num_workers=4
-gpu="0,1"                               # Which gpu you want to use
+gpu="3"                               # Which gpu you want to use
 
-backbone=mobilevit_v2               # Model backbone, mobilevit_v2, mobilenet_v2
+backbone=mobilenet_v2               # Model backbone, mobilevit_v2, mobilenet_v2
 
 wandb login
 
 # --- Available Flags ---
 # --use_sam
 # --cood_en # Coordinate enhancement
+# ----use_shift # use 25 shifted images
 
 python main.py \
   --backbone ${backbone} \

@@ -16,13 +16,13 @@ from PIL import Image
 import copy
 
 class FaceDataset(Dataset):
-    def __init__(self, root_dir, is_train, is_coord_enhance = False, is_random_resize_crop = False, input_resolution = None, is_test = False):
+    def __init__(self, root_dir, is_train, is_coord_enhance = False, is_random_resize_crop = False, input_resolution = None, use_25shift = False):
         super(FaceDataset, self).__init__()
 
         #self.local_rank = local_rank
         self.is_train = is_train
         self.num_kps = 68
-        self.is_test = is_test
+        self.use_25shift = use_25shift
         self.is_coord_enhance = is_coord_enhance
         self.shift = [-6, -3, 0, 3, 6]
 
@@ -135,7 +135,7 @@ class FaceDataset(Dataset):
             img = torch.cat((img, xx, yy, rr), dim = 0)
         
         shift_imgs = None
-        if (self.is_test):
+        if (self.use_25shift):
             for x_shift in self.shift:
                 for y_shift in self.shift:
                     temp = transforms.functional.affine(img = img.clone(), translate = [x_shift, y_shift], shear = 0, scale = 1, resample = False, fillcolor = [0, 0, 0], angle = 0)
@@ -148,7 +148,7 @@ class FaceDataset(Dataset):
 
         if self.is_train:
                 return img, label
-        elif self.is_test : 
+        elif self.use_25shift : 
             return img_o, shift_imgs, label,
         else:
             return img_o, img, label, 
