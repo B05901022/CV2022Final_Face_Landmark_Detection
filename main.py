@@ -10,7 +10,7 @@ from torch.nn import functional as F
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
-from pytorch_lightning.callbacks import LearningRateMonitor
+from pytorch_lightning.callbacks import LearningRateMonitor, StochasticWeightAveraging
 from pytorch_lightning.loggers import TensorBoardLogger
 # import timm
 import torchvision
@@ -555,13 +555,15 @@ def main(hparams):
 
         lr_monitor = LearningRateMonitor(logging_interval='step')
 
+        swa_callback = StochasticWeightAveraging(swa_epoch_start  = hparams.swa_epoch_start, swa_lrs = hparams.swa_lrs, annealing_epochs = hparams.annealing_epochs)
+
         trainer = pl.Trainer(
             devices = hparams.gpu,
             accelerator="gpu",
             strategy = "ddp" if len(hparams.gpu) > 1 else None,
             benchmark=True,
             logger = logger,
-            callbacks=[checkpoint_callback, lr_monitor],
+            callbacks=[checkpoint_callback, lr_monitor, swa_callback],
             check_val_every_n_epoch=1,
             progress_bar_refresh_rate=2,
             max_epochs = hparams.epoch,
@@ -625,13 +627,15 @@ def main(hparams):
 
         lr_monitor = LearningRateMonitor(logging_interval='step')
 
+        swa_callback = StochasticWeightAveraging(swa_epoch_start  = hparams.swa_epoch_start, swa_lrs = hparams.swa_lrs, annealing_epochs = hparams.annealing_epochs)
+
         trainer = pl.Trainer(
             devices = hparams.gpu,
             accelerator="gpu",
             strategy = "ddp" if len(hparams.gpu) > 1 else None,
             benchmark=True,
             logger = logger,
-            callbacks=[checkpoint_callback, lr_monitor],
+            callbacks=[checkpoint_callback, lr_monitor, swa_callback],
             check_val_every_n_epoch=1,
             progress_bar_refresh_rate=1,
             max_epochs = hparams.epoch,
@@ -695,6 +699,9 @@ if __name__ == "__main__":
     parser.add_argument('--cood_en', help='Append coordinate information', action='store_true')
     parser.add_argument('--use_sam', help='Use sharpness-aware minimization (SAM) optimizer (second-order optimization).', action='store_true')
     parser.add_argument('--seed', help='Random seed.', default=7, type=int)
+    parser.add_argument('--swa_epoch_start', help='Percentage of epoch which SWA starts performing.', default=0.8, type=float)
+    parser.add_argument('--annealing_epochs', help='Number of epochs in the annealing phase.', default=10, type=int)
+    parser.add_argument('--swa_lrs', help='Swa learning rate.', default=1e-2, type=float)
 
     # --- GPU/CPU Arguments ---
     parser.add_argument('--num_workers', help='Number of workers', default=4, type=int)

@@ -6,7 +6,7 @@ ckpt_path=./checkpoints/
 log_path=./log/
 
 # --- Logging Arguments ---
-exp_name=Exp_15_mbvitv2_L1_rand_fullres                     # Name for wand running
+exp_name=Exp_25_mbv2_CA_L1_SWA                     # Name for wand running
 ckpt_name=default_ckpt              # name of check point (Used when testing)
 
 # --- Training Hyperparameters ---
@@ -17,14 +17,17 @@ wd=0.00001
 beta1=0.9                           # if use Adam, beta would be used
 beta2=0.999
 momentum=0.9                        # For SGD
-bs=32                               # Batch size
+bs=50                               # Batch size
 seed=7
+swa_epoch_start=0.8
+annealing_epochs=10
+swa_lrs=0.01
 # --- GPU/CPU Arguments ---
 num_workers=4
-gpu="0,1"                               # Which gpu you want to use
+gpu="3"                               # Which gpu you want to use
 
 
-backbone=mobilevit_v2               # Model backbone   , mobilevit_v2, mobilenet_v2
+backbone=mobilenet_v2_ca               # Model backbone   , mobilevit_v2, mobilenet_v2, mobilenet_v2_ca
 
 # --- Available Flags ---
 # --use_sam
@@ -52,3 +55,6 @@ python main.py \
   --num_workers ${num_workers} \
   --gpu ${gpu} \
   --train ${train}\
+  --swa_epoch_start ${swa_epoch_start}\
+  --annealing_epochs ${annealing_epochs}\
+  --swa_lrs ${swa_lrs}\
