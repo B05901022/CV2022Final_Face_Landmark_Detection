@@ -390,6 +390,7 @@ class FaceSynthetics(pl.LightningModule):
                 y_acc += self._flip_keypoints(y_hat_flip)
 
             y_hat = y_acc / (2 * x.shape[1])
+            # y_hat = y_acc / (x.shape[1])
         else :
             y_hat = self(x)
             y_hat_flip = self(x_flip)
@@ -582,7 +583,7 @@ def main(hparams):
         model = FaceSynthetics.load_from_checkpoint(ckpt)
         # --- Fit testing ---
         test_path = osp.join(hparams.dataset_path, 'aflw_val')
-        test_set = FaceDataset(root_dir=test_path, is_train=False, is_coord_enhance = hparams.cood_en, input_resolution=256, is_test = True)
+        test_set = FaceDataset(root_dir=test_path, is_train=False, is_coord_enhance = hparams.cood_en, input_resolution=384, is_test = False)
         test_loader = DataLoader(test_set, batch_size=hparams.bs, shuffle=False)
 
         trainer = pl.Trainer(
@@ -665,7 +666,7 @@ def main(hparams):
         ckpt = osp.join(hparams.ckpt_path, hparams.ckpt_name)
         model = FaceSynthetics.load_from_checkpoint(ckpt)
         test_path = osp.join(hparams.dataset_path, 'aflw_test')
-        gen_result_data(model = model, path = test_path, devices = hparams.gpu, input_resolution=256)
+        gen_result_data(model = model, path = test_path, devices = hparams.gpu, input_resolution=384, use_shift = True)
         
 
 if __name__ == "__main__":
