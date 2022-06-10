@@ -241,7 +241,7 @@ class Label_adaption(pl.LightningModule):
         return [opt], [lr_scheduler]
 
 class FaceSynthetics(pl.LightningModule):
-    def __init__(self, backbone, fc_extend, loss_func, lr, wd, beta1 = 0.9, beta2 = 0.999, momentum = 0.9, cood_en=False, use_sam=False, is_ddp=False):
+    def __init__(self, backbone, fc_extend, loss_func, lr, wd, beta1 = 0.9, beta2 = 0.999, momentum = 0.9, cood_en=False, use_sam=False, is_ddp=False, lr_nosch=False):
         super().__init__()
         self.save_hyperparameters()
         self.backbone = model_sel(backbone, cood_en=cood_en)
@@ -264,6 +264,7 @@ class FaceSynthetics(pl.LightningModule):
         self.use_gnll = loss_func == 'GNLL'
         if self.use_gnll:
             self.prob_fc = nn.Linear(self.fc[1].in_features, 68)
+        self.lr_nosch = lr_nosch
 
     def forward(self, x):
         # use forward for inference/predictions
@@ -301,6 +302,11 @@ class FaceSynthetics(pl.LightningModule):
                 loss2 = self.loss(y_hat, y) * 5.0
             self.manual_backward(loss2)
             optimizer.second_step(zero_grad=True)
+
+            if not self.lr_nosch:
+                sch = self.lr_schedulers()
+                if self.trainer.is_last_batch:
+                    sch.step()
 
         self.log('train_loss', loss, on_epoch=True)
         return loss
@@ -497,12 +503,15 @@ class FaceSynthetics(pl.LightningModule):
             milestones=[15,25,28],
             gamma=0.1,
             )
-        lr_scheduler = {
-                'scheduler': scheduler,
-                'name': 'learning_rate',
-                'interval':'epoch',
-                'frequency': 1}
-        return [opt], [lr_scheduler]
+        if self.lr_nosch:
+            return opt
+        else:
+            lr_scheduler = {
+                    'scheduler': scheduler,
+                    'name': 'learning_rate',
+                    'interval':'epoch',
+                    'frequency': 1}
+            return [opt], [lr_scheduler]
 
 
 def main(hparams):
@@ -524,8 +533,8 @@ def main(hparams):
         # --- Dataset 
         train_path = osp.join(hparams.dataset_path, 'synthetics_train')
         val_path = osp.join(hparams.dataset_path, 'aflw_val')
-        train_set = FaceDataset(root_dir = train_path, is_train=True, is_coord_enhance = hparams.cood_en, is_random_resize_crop = False, input_resolution=256)
-        val_set = FaceDataset(root_dir=val_path, is_train=False, is_coord_enhance = hparams.cood_en, input_resolution=256)
+        train_set = FaceDataset(root_dir = train_path, is_train=True, is_coord_enhance = hparams.cood_en, is_random_resize_crop = False, input_resolution=384)
+        val_set = FaceDataset(root_dir=val_path, is_train=False, is_coord_enhance = hparams.cood_en, input_resolution=384)
 
         train_loader = DataLoader(train_set, batch_size=hparams.bs, shuffle=True, num_workers=hparams.num_workers, pin_memory=True, prefetch_factor = 8)
         val_loader = DataLoader(val_set, batch_size=hparams.bs, shuffle=False)
@@ -543,6 +552,7 @@ def main(hparams):
               cood_en = hparams.cood_en,
               use_sam = hparams.use_sam,
               is_ddp = len(hparams.gpu) > 1,
+              lr_nosch = hparams.lr_nosch,
               )
         # --- Fit model to trainer ---
         checkpoint_callback = ModelCheckpoint(
@@ -556,7 +566,10 @@ def main(hparams):
 
         lr_monitor = LearningRateMonitor(logging_interval='step')
 
-        swa_callback = StochasticWeightAveraging(swa_epoch_start  = hparams.swa_epoch_start, swa_lrs = hparams.swa_lrs, annealing_epochs = hparams.annealing_epochs)
+        callbacks = [checkpoint_callback, lr_monitor]
+        if hparams.use_swa:
+            swa_callback = StochasticWeightAveraging(swa_epoch_start  = hparams.swa_epoch_start, swa_lrs = hparams.swa_lrs, annealing_epochs = hparams.annealing_epochs)
+            callbacks.append(swa_callback)
 
         trainer = pl.Trainer(
             devices = hparams.gpu,
@@ -564,7 +577,7 @@ def main(hparams):
             strategy = "ddp" if len(hparams.gpu) > 1 else None,
             benchmark=True,
             logger = logger,
-            callbacks=[checkpoint_callback, lr_monitor, swa_callback],
+            callbacks=callbacks,
             check_val_every_n_epoch=1,
             progress_bar_refresh_rate=2,
             max_epochs = hparams.epoch,
@@ -692,6 +705,7 @@ if __name__ == "__main__":
     parser.add_argument('--epoch', help='Training epochs.', default=50, type=int)
     parser.add_argument('--loss', help='Loss function.', default='L1', type=str)
     parser.add_argument('--lr', help='Learning rate.', default=1e-2, type=float)
+    parser.add_argument('--lr_nosch', help='Disable LR scheduler.', action='store_true')
     parser.add_argument('--wd', help='Weight decay of optimizer', default=1e-5, type=float)
     parser.add_argument('--beta1', help='beta1 of Adam', default=0.9, type=float)
     parser.add_argument('--beta2', help='beta2 of Adam', default=0.999, type=float)
@@ -703,6 +717,7 @@ if __name__ == "__main__":
     parser.add_argument('--swa_epoch_start', help='Percentage of epoch which SWA starts performing.', default=0.8, type=float)
     parser.add_argument('--annealing_epochs', help='Number of epochs in the annealing phase.', default=10, type=int)
     parser.add_argument('--swa_lrs', help='Swa learning rate.', default=1e-2, type=float)
+    parser.add_argument('--use_swa', help='Enable SWA.', action='store_true')
 
     # --- GPU/CPU Arguments ---
     parser.add_argument('--num_workers', help='Number of workers', default=4, type=int)
