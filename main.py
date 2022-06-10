@@ -24,6 +24,7 @@ import cv2
 from models.models_select import model_sel, adapt_sel, fc_sel
 from loss_function.loss_select import loss_sel
 from src.tool import gen_result_data
+from src.visualization import visualization
 from src.custom_optimizer import SAM
 
 def plot_keypoints_2(img, keypoints):
@@ -681,6 +682,11 @@ def main(hparams):
         test_path = osp.join(hparams.dataset_path, 'aflw_test')
         gen_result_data(model = model, path = test_path, devices = hparams.gpu, input_resolution=384, use_shift = hparams.use_shift)
         
+    elif hparams.test_image_path:
+        ckpt = osp.join(hparams.ckpt_path, hparams.ckpt_name)
+        model = FaceSynthetics.load_from_checkpoint(ckpt)
+        visualization(model = model, test_image_path = hparams.test_image_path, devices = hparams.gpu, input_resolution=384, use_shift = hparams.use_shift)
+    
 
 if __name__ == "__main__":
 
@@ -730,6 +736,11 @@ if __name__ == "__main__":
     parser.add_argument('--adaption_test', help='Run in test mode.', action='store_true')
     parser.add_argument('--test_file', help='Generate testing data.', action='store_true')
     parser.add_argument('--use_shift', help='Use 25 shifted image.', action='store_true')
+
+    # --- Visualization ---
+    parser.add_argument('--test_image_path', help='image to visualize', default = '../aflw_val/image00013.jpg')
+    parser.add_argument('--visualize', help='visualization', action='store_true')
+
 
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()

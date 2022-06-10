@@ -30,8 +30,6 @@ def gen_result_data(model, path, devices, input_resolution = None, use_shift = F
     else: 
         img_size = input_resolution
 
-    shift = [0, 0, 0, 0, 0]
-
     transform = A.ReplayCompose(
         [A.geometric.resize.Resize(img_size, img_size, interpolation=cv2.INTER_LINEAR),
         A.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
