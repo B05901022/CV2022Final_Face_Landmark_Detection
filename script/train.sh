@@ -6,11 +6,11 @@ ckpt_path=./checkpoints/
 log_path=./log/
 
 # --- Logging Arguments ---
-exp_name=Exp_28_mbnetv2_L1_rand_fullres_60ep_nosch_swa                     # Name for wand running
+exp_name=Exp_30_mbnetv2b_L1_rand_fullres_180ep_nosch                     # Name for wand running
 ckpt_name=default_ckpt              # name of check point (Used when testing)
 
 # --- Training Hyperparameters ---
-epoch=60
+epoch=180
 loss=L1                           # Wing, AdaptWing, SmoothL1
 lr=0.01
 wd=0.00001
@@ -27,7 +27,7 @@ num_workers=4
 gpu="0,1"                               # Which gpu you want to use
 
 
-backbone=mobilenet_v2               # Model backbone   , mobilevit_v2, mobilenet_v2, mobilenet_v2_ca
+backbone=mobilenet_v2_b               # Model backbone   , mobilevit_v2, mobilenet_v2, mobilenet_v2_ca
 
 # --- Available Flags ---
 # --use_sam
@@ -58,8 +58,8 @@ python main.py \
   --gpu ${gpu} \
   --train ${train}\
   --lr_nosch \
-  --use_swa \
-  --swa_epoch_start ${swa_epoch_start}\
-  --annealing_epochs ${annealing_epochs}\
-  --swa_lrs ${swa_lrs}\
+  #--use_swa \
+  #--swa_epoch_start ${swa_epoch_start}\
+  #--annealing_epochs ${annealing_epochs}\
+  #--swa_lrs ${swa_lrs}\
   #--use_sam \

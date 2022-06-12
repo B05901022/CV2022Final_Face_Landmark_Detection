@@ -6,8 +6,8 @@ ckpt_path=./checkpoints/
 log_path=./log/
 
 # --- Logging Arguments ---
-exp_name=Exp_Mobilenet_L1_FullRes_60EPOCH_NOSCH_SWA                      # Name for wand running
-ckpt_name=Exp_27_mbnetv2_L1_rand_fullres_60ep_nosch_epoch=59-val_loss=0.0253.ckpt             # name of check point (Used when testing)
+exp_name=Exp_MobilenetB_L1_FullRes_180EPOCH_NOSCH                      # Name for wand running
+ckpt_name=Exp_30_mbnetv2b_L1_rand_fullres_180ep_nosch_epoch=174-val_loss=0.0246.ckpt             # name of check point (Used when testing)
 
 # --- Training Hyperparameters ---
 epoch=30                         
