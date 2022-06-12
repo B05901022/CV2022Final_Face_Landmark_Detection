@@ -19,8 +19,7 @@ import torch.nn as nn
 import pandas as pd
 import matplotlib.pyplot as plt
 import copy
-
-
+from pathlib import Path
 
 def model_transform(model):
     def backward_hook(module, grad_input, grad_output):
@@ -30,7 +29,7 @@ def model_transform(model):
             m.saved_grad = m.register_backward_hook(backward_hook)
     return model
 
-def visualization(model, test_image_path, devices, input_resolution = None, detect_target = "Default"):
+def visualization(model, test_image_path, devices, input_resolution = None, detect_target = "Default", save_img_path = "../CV_visualize/"):
     
 
     if input_resolution is None:
@@ -104,7 +103,7 @@ def visualization(model, test_image_path, devices, input_resolution = None, dete
                                                      titles=['Original', detect_target],
                                                      )
 
-    figure.savefig(f"../CV_visualize/{detect_target}.jpg")
+    figure.savefig(Path(save_img_path)/Path(f"{detect_target}.jpg"))
 
     del attributions_gs
 

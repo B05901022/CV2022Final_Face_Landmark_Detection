@@ -11,6 +11,7 @@ detect_target=0
 # --- Path Arguments ---
 ckpt_path=./checkpoints/
 test_image_path=../data/aflw_val/image00013.jpg
+save_img_path=../CV_visualize/
 
 # --- Logging Arguments ---
 exp_name=Exp_27_mbv2_L1_fullres_60ep_nosch_vis                     # Name for wand running
@@ -22,6 +23,8 @@ gpu="0"                               # Which gpu you want to use
 # --- Available Flags ---
 # ----use_shift # use 25 shifted images
 
+mkdir -p $save_img_path
+
 wandb login
 
 python main.py \
@@ -32,3 +35,4 @@ python main.py \
   --ckpt_name $ckpt_name \
   --gpu $gpu \
   --detect_target $detect_target \
+  --save_img_path $save_img_path \

@@ -696,7 +696,14 @@ def main(hparams):
             detect_target = "Nose"
         elif hparams.detect_target == 4:
             detect_target = "Mouth"
-        visualization(model = model, test_image_path = hparams.test_image_path, devices = hparams.gpu, input_resolution=384, detect_target=detect_target)
+        visualization(
+            model = model,
+            test_image_path = hparams.test_image_path,
+            devices = hparams.gpu,
+            input_resolution=384,
+            detect_target=detect_target,
+            save_img_path=hparams.save_img_path,
+            )
     
 
 if __name__ == "__main__":
@@ -752,6 +759,7 @@ if __name__ == "__main__":
     parser.add_argument('--test_image_path', help='image to visualize', default = '../aflw_val/image00013.jpg')
     parser.add_argument('--visualize', help='visualization', action='store_true')
     parser.add_argument('--detect_target', help='Visualization target (0: default, 1: FaceSilhouette, 2: Eyes, 3: Nose, 4: Mouth).', type=int, default=0)
+    parser.add_argument('--save_img_path', help='Directory to save images.', default='../CV_visualize/', type=str)
 
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
