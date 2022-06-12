@@ -574,8 +574,8 @@ def main(hparams):
             callbacks.append(swa_callback)
 
         trainer = pl.Trainer(
-            devices = hparams.gpu,
-            accelerator="gpu",
+            devices = hparams.gpu if hparams.gpu[0] != -1 else None,
+            accelerator="gpu" if hparams.gpu[0] != -1 else 'cpu',
             strategy = "ddp" if len(hparams.gpu) > 1 else None,
             benchmark=True,
             logger = logger,
@@ -602,8 +602,8 @@ def main(hparams):
         test_loader = DataLoader(test_set, batch_size=hparams.bs, shuffle=False)
 
         trainer = pl.Trainer(
-            devices = hparams.gpu,
-            accelerator="gpu",
+            devices = hparams.gpu if hparams.gpu[0] != -1 else None,
+            accelerator="gpu" if hparams.gpu[0] != -1 else 'cpu',
             strategy = "ddp" if len(hparams.gpu) > 1 else None,
             logger = logger,
         )
@@ -646,8 +646,8 @@ def main(hparams):
         swa_callback = StochasticWeightAveraging(swa_epoch_start  = hparams.swa_epoch_start, swa_lrs = hparams.swa_lrs, annealing_epochs = hparams.annealing_epochs)
 
         trainer = pl.Trainer(
-            devices = hparams.gpu,
-            accelerator="gpu",
+            devices = hparams.gpu if hparams.gpu[0] != -1 else None,
+            accelerator="gpu" if hparams.gpu[0] != -1 else 'cpu',
             strategy = "ddp" if len(hparams.gpu) > 1 else None,
             benchmark=True,
             logger = logger,
@@ -670,8 +670,8 @@ def main(hparams):
         test_loader = DataLoader(test_set, batch_size=hparams.bs, shuffle=False)
 
         trainer = pl.Trainer(
-            devices = hparams.gpu,
-            accelerator="gpu",
+            devices = hparams.gpu if hparams.gpu[0] != -1 else None,
+            accelerator="gpu" if hparams.gpu[0] != -1 else 'cpu',
             strategy = "ddp" if len(hparams.gpu) > 1 else None,
             logger = logger,
         )

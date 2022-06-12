@@ -87,7 +87,7 @@ def visualization(model, test_image_path, devices, input_resolution = None, dete
     
     
     attributions_gs = gradient_shap.attribute(img,
-                                              n_samples=50,
+                                              n_samples=5,
                                               stdevs=0.0001,
                                               baselines=rand_img_dist,
                                               target=detect_target_list,

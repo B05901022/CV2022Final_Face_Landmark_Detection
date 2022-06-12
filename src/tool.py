@@ -25,6 +25,8 @@ def fixed_seed(myseed):
         torch.cuda.manual_seed(myseed)
 
 def gen_result_data(model, path, devices, input_resolution = None, use_shift = False):
+    shift = [-6, -3, 0, 3, 6]
+
     if input_resolution is None:
         img_size = 256
     else: 
@@ -35,8 +37,10 @@ def gen_result_data(model, path, devices, input_resolution = None, use_shift = F
         A.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
         ToTensorV2()]
     )
-
-    devices_str = "cuda:" + str(devices[0])
+    if devices[0] != -1:
+        devices_str = "cuda:" + str(devices[0])
+    else:
+        devices_str = "cpu"
     device = torch.device(devices_str)
     # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     # os.environ["CUDA_VISIBLE_DEVICES"] = ",".join([str(item) for item in devices])

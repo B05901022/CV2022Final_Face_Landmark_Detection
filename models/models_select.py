@@ -3,7 +3,7 @@ import torch.nn as nn
 from .label_adaption import *
 from .models_exp import *
 from .mobilenext_v3_CMAB import *
-from .mobilenet_v2_CBAM import *
+from .mobilenet_v2_CBAM2 import *
 from .models_mobilenet_v2_ca import *
 from .mobilenet_v2_LK import *
 
