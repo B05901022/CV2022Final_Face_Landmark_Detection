@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from argparse import ArgumentParser
 import argparse
+from ast import parse
 from pathlib import Path
 import os
 import os.path as osp
@@ -682,10 +683,20 @@ def main(hparams):
         test_path = osp.join(hparams.dataset_path, 'aflw_test')
         gen_result_data(model = model, path = test_path, devices = hparams.gpu, input_resolution=384, use_shift = hparams.use_shift)
         
-    elif hparams.test_image_path:
+    elif hparams.visualize:
         ckpt = osp.join(hparams.ckpt_path, hparams.ckpt_name)
         model = FaceSynthetics.load_from_checkpoint(ckpt)
-        visualization(model = model, test_image_path = hparams.test_image_path, devices = hparams.gpu, input_resolution=384, use_shift = hparams.use_shift)
+        if hparams.detect_target == 0:
+            detect_target = "Default"
+        elif hparams.detect_target == 1:
+            detect_target = "FaceSilhouette"
+        elif hparams.detect_target == 2:
+            detect_target = "Eyes"
+        elif hparams.detect_target == 3:
+            detect_target = "Nose"
+        elif hparams.detect_target == 4:
+            detect_target = "Mouth"
+        visualization(model = model, test_image_path = hparams.test_image_path, devices = hparams.gpu, input_resolution=384, detect_target=detect_target)
     
 
 if __name__ == "__main__":
@@ -740,7 +751,7 @@ if __name__ == "__main__":
     # --- Visualization ---
     parser.add_argument('--test_image_path', help='image to visualize', default = '../aflw_val/image00013.jpg')
     parser.add_argument('--visualize', help='visualization', action='store_true')
-
+    parser.add_argument('--detect_target', help='Visualization target (0: default, 1: FaceSilhouette, 2: Eyes, 3: Nose, 4: Mouth).', type=int, default=0)
 
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()

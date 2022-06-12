@@ -17,7 +17,8 @@ from captum.attr import GradientShap
 from captum.attr import visualization as viz
 import torch.nn as nn
 import pandas as pd
-
+import matplotlib.pyplot as plt
+import copy
 
 
 
@@ -29,7 +30,7 @@ def model_transform(model):
             m.saved_grad = m.register_backward_hook(backward_hook)
     return model
 
-def visualization(model, test_image_path, devices, input_resolution = None, detect_target = "FaceSilhouette"):
+def visualization(model, test_image_path, devices, input_resolution = None, detect_target = "Default"):
     
 
     if input_resolution is None:
@@ -43,16 +44,21 @@ def visualization(model, test_image_path, devices, input_resolution = None, dete
         ToTensorV2()]
     )
 
-    model.to(devices)
+    devices = devices[0] # Only use first GPU
+    if devices != -1:
+        device = f'cuda:{devices}'
+        model.to(device)
     model.eval()
     
     img = cv2.imread(test_image_path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    orig_img = copy.deepcopy(img)
     t = transform(image=img)
     img = t['image']
 
-    img = Variable(img).unsqueeze(0).to(devices)
-
+    img = Variable(img).unsqueeze(0)
+    if devices != -1:
+        img = img.to(device)
 
     if detect_target == "FaceSilhouette":
         detect_target_list = [i for i in range(54)]
@@ -62,6 +68,10 @@ def visualization(model, test_image_path, devices, input_resolution = None, dete
         detect_target_list = [i for i in range(54,72)]
     elif detect_target == "Mouth":
         detect_target_list = [i for i in range(96,136)]
+    elif detect_target == "Default":
+        detect_target_list = 0
+    if detect_target != "Default":
+        img = img.repeat((len(detect_target_list),1,1,1))
 
     default_cmap = LinearSegmentedColormap.from_list('custom blue', 
                                                      [(0, '#ffffff'),
@@ -81,13 +91,21 @@ def visualization(model, test_image_path, devices, input_resolution = None, dete
                                               n_samples=50,
                                               stdevs=0.0001,
                                               baselines=rand_img_dist,
-                                              target=detect_target)
-    _ = viz.visualize_image_attr_multiple(np.transpose(attributions_gs.squeeze().cpu().detach().numpy(), (1,2,0)),
-                                          np.transpose(img.squeeze().cpu().detach().numpy(), (1,2,0)),
-                                          ["original_image", "heat_map"],
-                                          ["all", "absolute_value"],
-                                          cmap=default_cmap,
-                                          show_colorbar=True)
+                                              target=detect_target_list,
+                                              )
+    figure, axis = viz.visualize_image_attr_multiple(np.transpose(attributions_gs.mean(dim=0).cpu().detach().numpy(), (1,2,0)),
+                                                     #np.transpose(img.mean(dim=0).cpu().detach().numpy(), (1,2,0)),
+                                                     orig_img,
+                                                     ["original_image", "heat_map"],
+                                                     ["all", "absolute_value"],
+                                                     cmap=default_cmap,
+                                                     show_colorbar=True,
+                                                     use_pyplot=False,
+                                                     titles=['Original', detect_target],
+                                                     )
+
+    figure.savefig(f"../CV_visualize/{detect_target}.jpg")
+
     del attributions_gs
 
     return
