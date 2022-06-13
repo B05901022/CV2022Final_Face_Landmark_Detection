@@ -18,6 +18,8 @@ MODEL_CKPTS = [
 
 def uniform_soup(model_path, model_list):
 
+	pl.seed_everything(127)
+
 	models = [Path(model_path)/Path(i) for i in model_list]
 
 	default_model = FaceSynthetics.load_from_checkpoint(models[0])
