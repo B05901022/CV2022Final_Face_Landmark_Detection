@@ -24,7 +24,7 @@ import copy
 import cv2
 from models.models_select import model_sel, adapt_sel, fc_sel
 from loss_function.loss_select import loss_sel
-from src.tool import gen_result_data
+from src.tool import gen_result_data, inference_one
 from src.visualization import visualization
 from src.custom_optimizer import SAM
 
@@ -383,6 +383,8 @@ class FaceSynthetics(pl.LightningModule):
         device = x.get_device()
 
         x_flip = x.clone().flip(dims=(-1,))
+        # x_flip = x.clone()
+        # x_flip[:, 0: 3, :, :] = x_flip[:, 0: 3, :, :].flip(dims=(-1,))
 
         y_acc = torch.zeros((batch_size, 68, 2)).to(device)
 
@@ -704,7 +706,17 @@ def main(hparams):
             detect_target=detect_target,
             save_img_path=hparams.save_img_path,
             )
-    
+
+    elif hparams.inf_one:
+        ckpt = osp.join(hparams.ckpt_path, hparams.ckpt_name)
+        model = FaceSynthetics.load_from_checkpoint(ckpt)
+        inference_one(
+            model = model,
+            image_path = hparams.test_image_path,
+            devices = hparams.gpu,
+            save_path=hparams.save_img_path,
+            input_resolution=384,
+            )
 
 if __name__ == "__main__":
 
@@ -754,6 +766,7 @@ if __name__ == "__main__":
     parser.add_argument('--adaption_test', help='Run in test mode.', action='store_true')
     parser.add_argument('--test_file', help='Generate testing data.', action='store_true')
     parser.add_argument('--use_shift', help='Use 25 shifted image.', action='store_true')
+    parser.add_argument('--inf_one', help='inference one.', action='store_true')
 
     # --- Visualization ---
     parser.add_argument('--test_image_path', help='image to visualize', default = '../aflw_val/image00013.jpg')

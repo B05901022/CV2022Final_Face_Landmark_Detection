@@ -11,6 +11,7 @@ import numpy as np
 import pickle
 from torchvision import transforms
 import os
+import copy
 
 
 
@@ -23,6 +24,12 @@ def fixed_seed(myseed):
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(myseed)
         torch.cuda.manual_seed(myseed)
+
+def plot_keypoints_2(img, keypoints):
+    img = copy.deepcopy(img)
+    for y, x in keypoints:
+        cv2.circle(img, (y, x), 5, (0, 0, 255), -1)
+    return img
 
 def gen_result_data(model, path, devices, input_resolution = None, use_shift = False):
     shift = [-6, -3, 0, 3, 6]
@@ -102,4 +109,50 @@ def gen_result_data(model, path, devices, input_resolution = None, use_shift = F
             if (i % 100 == 0):
                 print("%d images" % (i))
 
+def inference_one(model, image_path, save_path, devices, input_resolution = None):
+    shift = [-6, -3, 0, 3, 6]
+
+    if input_resolution is None:
+        img_size = 256
+    else: 
+        img_size = input_resolution
+
+    transform = A.ReplayCompose(
+        [A.geometric.resize.Resize(img_size, img_size, interpolation=cv2.INTER_LINEAR),
+        A.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
+        ToTensorV2()]
+    )
+    if devices[0] != -1:
+        devices_str = "cuda:" + str(devices[0])
+    else:
+        devices_str = "cpu"
+    device = torch.device(devices_str)
+
+    model.to(device)
+    model.eval()
+
+
+    img_o = cv2.imread(image_path)
+    # img_o = cv2.cvtColor(img_o, cv2.COLOR_BGR2RGB)
+    t = transform(image=img_o)
+    img = t['image']
+    img_o = cv2.resize(img_o, dsize=(img_size, img_size))
+
+    img = Variable(img).unsqueeze(0).to(device)
+
+    with torch.no_grad():
+        out = model(img)
+
+        img_flip = img.clone().flip(dims=(-1,))
+        out_flip = model(img_flip)
+        out_flip = out_flip.view(-1,68,2)
+        
+        out = (out + model._flip_keypoints(out_flip).view(-1,68 * 2)) / 2
+
+        out = out.view(-1,68,2)
+        kp_p = out.cpu().detach().numpy()[0]
+    kp_p = (kp_p + 1) / 2 * img_size
+    kp_p = np.array(kp_p).astype(np.int32)
+    predict = plot_keypoints_2(img_o, kp_p)
+    cv2.imwrite(save_path, predict)
             
