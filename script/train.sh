@@ -6,11 +6,11 @@ ckpt_path=./checkpoints/
 log_path=./log/
 
 # --- Logging Arguments ---
-exp_name=Exp_30_mbnetv2b_L1_rand_fullres_180ep_nosch                     # Name for wand running
+exp_name=Exp_31_mbnetv2b_L1_rand_fullres_240ep_nosch                     # Name for wand running
 ckpt_name=default_ckpt              # name of check point (Used when testing)
 
 # --- Training Hyperparameters ---
-epoch=180
+epoch=240
 loss=L1                           # Wing, AdaptWing, SmoothL1
 lr=0.01
 wd=0.00001

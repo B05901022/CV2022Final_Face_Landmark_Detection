@@ -6,8 +6,8 @@ ckpt_path=./checkpoints/
 log_path=./log/
 
 # --- Logging Arguments ---
-exp_name=Exp_30_mbv2b_L1_fullres_180ep_nosch                      # Name for wand running
-ckpt_name=Exp_30_mbnetv2b_L1_rand_fullres_180ep_nosch_epoch=174-val_loss=0.0246.ckpt              # name of check point (Used when testing)
+exp_name=UniformSoup #Exp_31_mbv2b_L1_fullres_240ep_nosch                      # Name for wand running
+ckpt_name=merged.ckpt #Exp_31_mbnetv2b_L1_rand_fullres_240ep_nosch_epoch=222-val_loss=0.0241.ckpt              # name of check point (Used when testing)
 
 # --- Training Hyperparameters ---
 epoch=30                         

@@ -14,6 +14,8 @@ MODEL_CKPTS = [
 	'Exp_31_mbnetv2b_L1_rand_fullres_240ep_nosch_epoch=222-val_loss=0.0241.ckpt',
 	'Exp_31_mbnetv2b_L1_rand_fullres_240ep_nosch_epoch=239-val_loss=0.0241.ckpt',
 	#'Exp_31_mbnetv2b_L1_rand_fullres_240ep_nosch_epoch=233-val_loss=0.0241.ckpt',
+	'Exp_31_mbnetv2b_L1_rand_fullres_240ep_nosch_epoch=238-val_loss=0.0242.ckpt',
+	#'Exp_31_mbnetv2b_L1_rand_fullres_240ep_nosch_epoch=201-val_loss=0.0242.ckpt',
 ]
 
 def uniform_soup(model_path, model_list):
