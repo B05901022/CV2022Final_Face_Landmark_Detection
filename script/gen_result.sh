@@ -22,7 +22,7 @@ cood_en=false                       # Coordinate enhancement,
 seed=7
 # --- GPU/CPU Arguments ---
 num_workers=4
-gpu="0,1"                               # Which gpu you want to use
+gpu="0,1"                           # Which gpu you want to use. -1 for cpu
 
 
 backbone=mobilenet_v2               # Model backbone

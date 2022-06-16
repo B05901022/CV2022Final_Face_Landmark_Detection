@@ -1,39 +1,42 @@
 #!/bin/bash
 
 # --- Path Arguments ---
-dataset_path=../data/
-ckpt_path=./checkpoints/
-log_path=./log/
+dataset_path=../data/               # where is the dataset
+ckpt_path=./checkpoints/            # Path to save checkpoint
+log_path=./log/                     # Path to save log
 
 # --- Logging Arguments ---
-exp_name=Exp_31_mbnetv2b_L1_rand_fullres_240ep_nosch                     # Name for wand running
+exp_name=Exp_31_mbnetv2b_L1_rand_fullres_240ep_nosch        # Name for wand running
 ckpt_name=default_ckpt              # name of check point (Used when testing)
 
 # --- Training Hyperparameters ---
 epoch=240
-loss=L1                           # Wing, AdaptWing, SmoothL1
+loss=L1                             # L1, Wing, AdaptWing, SmoothL1, GNLL
 lr=0.01
 wd=0.00001
 beta1=0.9                           # if use Adam, beta would be used
 beta2=0.999
 momentum=0.9                        # For SGD
 bs=32                               # Batch size
-seed=7
-swa_epoch_start=0.8
+seed=7                              # Random seed
+
+# --- SWA setting
+swa_epoch_start=0.8                 
 annealing_epochs=10
 swa_lrs=0.01
+
 # --- GPU/CPU Arguments ---
 num_workers=4
-gpu="0,1"                               # Which gpu you want to use
+gpu="0,1"                             # Which gpu you want to use. -1 for cpu
 
 
-backbone=mobilenet_v2_b               # Model backbone   , mobilevit_v2, mobilenet_v2, mobilenet_v2_ca
+backbone=mobilenet_v2_b               # Model backbone, mobilevit_v2, mobilenet_v2, mobilenet_v2_ca, mobilenet_v2_lk, mobilenet_v2_b, 
 
 # --- Available Flags ---
-# --use_sam
-# --cood_en # Coordinate enhancement
-# --use_swa
-# --lr_nosch
+# --use_sam   # Use sam 
+# --cood_en   # Coordconv
+# --use_swa   # use swa
+# --lr_nosch  # Don't use learning rate scheduler
 
 wandb login
 echo ${test}
