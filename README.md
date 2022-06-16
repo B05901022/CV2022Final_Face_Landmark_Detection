@@ -209,12 +209,12 @@ To visualize your model of an image,
 Our work supports the visualization from [pytorch/captum](https://github.com/pytorch/captum).
 There are five modes you can choose,  
 
-- In **gen_visualize.sh**
+In **gen_visualize.sh**
 
-    0. Default
-    1. Face Silhouette
-    2. Eyes
-    3. Nose
-    4. Mouth
+0. Default
+1. Face Silhouette
+2. Eyes
+3. Nose
+4. Mouth
 
 **<font color=#FF0000>※ This operation requires a lot of RAM.</font> It is better to use cpu rather than GPU and makce sure that <font color=#FF0000>RAM > 50 GB </font>is available.**
