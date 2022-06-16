@@ -210,6 +210,7 @@ Our work supports the visualization from [pytorch/captum](https://github.com/pyt
 There are five modes you can choose,  
 
 - In **gen_visualize.sh**
+
     0. Default
     1. Face Silhouette
     2. Eyes
