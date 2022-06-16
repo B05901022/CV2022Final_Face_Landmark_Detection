@@ -28,7 +28,7 @@ In **main.py** change your project and entity
 
 ### Data
 ---
-Under the path you save your dataset, you should that you have included these folders
+Under the path you save your dataset, you should make sure that you have included these folders
 ```
 <Dataset Directory>  
 └─── synthetics_train
@@ -76,7 +76,7 @@ input_resolution=384
     <th style="text-align:center">Epoch</th>
   </tr>
   <tr style=" border-bottom: 1px solid white;">
-    <td style="text-align:center">MobileNet(1.25)</td>
+    <td style="text-align:center">MobileNetV2(1.25)</td>
     <td style="text-align:center">L1</td>
     <td style="text-align:center">SGD</td>
     <td style="text-align:center">0.01</td>
