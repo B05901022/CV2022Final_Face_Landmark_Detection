@@ -40,7 +40,7 @@ Under the path you save your dataset, you should make sure that you have include
 <h2 id = "Image_resoultion"> Image resoultion </h2>
 
 ---
-In **main.py**
+In **main.py**, change the image resolution,
 ```
 input_resolution=384 
 ```
