@@ -3,6 +3,7 @@
 - [Preparing](#Preparing)
 - [Image resoultion](#Image_resoultion)
 - [Final setup](#setup)
+- [Script](#Script)
 - [Taining](#Training)
 - [Testing](#Testing)
 - [Average models](#Average)
@@ -46,20 +47,6 @@ input_resolution=384
 ```
 <br>
 
-## Script
----
-```
-<script Directory>  
-└─── train.sh
-└─── test.sh
-└─── gen_result.sh
-└─── gen_visualize.sh
-└─── inference_one.sh
-└─── adapt.sh
-└─── infadapt_testerence_one.sh
-```
-<br>
-
 <h2 id = "setup"> Final setup </h2>
 
 ---
@@ -86,6 +73,21 @@ input_resolution=384
     <td style="text-align:center">240</td>
   </tr>
 </table>
+<br>
+
+<h2 id = "Script"> Script </h2>
+
+---
+```
+<script Directory>  
+└─── train.sh
+└─── test.sh
+└─── gen_result.sh
+└─── gen_visualize.sh
+└─── inference_one.sh
+└─── adapt.sh
+└─── adapt_test.sh
+```
 <br>
 
 <h2 id = "Training"> Training </h2>
