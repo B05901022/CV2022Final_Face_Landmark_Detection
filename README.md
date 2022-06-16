@@ -60,7 +60,7 @@
     - models_mobilenet_v2_ca.py : Mobilenet_v2 with coordinate attention
 
 ## Visualization
-Our work supports the visualization from [pytorch/captum](https://github.com/pytorch/captum) and [Captum/GradientShap](https://captum.ai/api/gradient_shap.html).
+Our work supports the visualization from [pytorch/captum](https://github.com/pytorch/captum) and [Captum/GradientShap](https://captum.ai/api/gradient_shap.html).  
 There are five modes you can choose,  
 0. Default
 1. Face Silhouette
