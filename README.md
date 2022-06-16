@@ -32,7 +32,8 @@ $ cd CV2022Final_Face_Landmark_Detection
 pip install -r requirements.txt
 ```
 
-**<font color=#FF0000>※ Check CUDA is available before training </font>**
+**<font color=#FF0000>※ Check CUDA is available before training </font>** <br>
+If you have any problem, you can contact us.
 ```
 import torch
 torch.cuda.is_available()
