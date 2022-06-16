@@ -162,7 +162,7 @@ Enter the command
     - Select the checkpoint you want to generate solution
     - There are some flag you can use for testing
         - `--use_shift`
-        - **<font color=#FF0000>※ gen_result does not support Coordconv </font>**
+    **<font color=#FF0000>※ gen_result does not support Coordconv </font>**
 
 <h2 id = "Inference_one"> Inference and plot one image </h2>
 
@@ -188,10 +188,10 @@ Our work supports the visualization from [pytorch/captum](https://github.com/pyt
 There are five modes you can choose,  
 In **gen_visualize.sh** 
 
-0. Default (for testing if pytorch captum works)
-1. Face Silhouette
-2. Eyes
-3. Nose
-4. Mouth
+1. Default (for testing if pytorch captum works)
+2. Face Silhouette
+3. Eyes
+4. Nose
+5. Mouth
 
 **<font color=#FF0000>※ This operation requires a lot of RAM.</font> It is better to use CPU rather than GPU and make sure that `RAM > 50 GB` is available.**
