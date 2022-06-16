@@ -17,8 +17,6 @@
 
 - python 3.7
 - CUDA 10.1
-  
-**<font color=#FF0000>※ Check CUDA is available before training </font>**
 
 ### Clone this repository
 
@@ -32,12 +30,8 @@ $ cd CV2022Final_Face_Landmark_Detection
 pip install -r requirements.txt
 ```
 
-**<font color=#FF0000>※ Check CUDA is available before training </font>** <br>
-If you have any problem, you can contact us.
-```
-import torch
-torch.cuda.is_available()
-```
+**<font color=#FF0000>※ Check torch.version.cuda is same as that from nvidia-smi </font>**
+
 
 ### File directory
 
