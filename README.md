@@ -13,10 +13,8 @@
 
 <h2 id = "Preparing"> Preparing </h2>
 
----
-
 ### Wandb
----
+
 Login your wandb.
 
 Enter this command in shell
@@ -27,20 +25,32 @@ In **main.py** change your project and entity
 ![image alt](./pic/1.png) <br>
 <br>
 
-### Data
----
+### Clone this repository
+
+```
+$ git clone https://github.com/B05901022/CV2022Final_Face_Landmark_Detection.git
+$ cd CV2022Final_Face_Landmark_Detection
+```
+
+### File directory
+
 Under the path you save your dataset, you should make sure that you have included these folders
 ```
-<Dataset Directory>  
-└─── synthetics_train
-└─── aflw_val
-└─── aflw_test
+CV2022Final_Face_Landmark_Detection/
+└─── main.py
+└─── ...
+
+data/
+└─── synthetics_train/
+        └─── annot.pkl
+└─── aflw_val/
+        └─── annot.pkl
+└─── aflw_test/
 ```
 <br>
 
 <h2 id = "Image_resoultion"> Image resoultion </h2>
 
----
 In **main.py**, change the image resolution,
 ```
 input_resolution=384 
@@ -48,8 +58,6 @@ input_resolution=384
 <br>
 
 <h2 id = "setup"> Final setup </h2>
-
----
 
 <table>
   <tr style=" border-top: 1px solid white;">
@@ -77,7 +85,6 @@ input_resolution=384
 
 <h2 id = "Script"> Script </h2>
 
----
 ```
 <script Directory>  
 └─── train.sh
@@ -92,16 +99,15 @@ input_resolution=384
 
 <h2 id = "Training"> Training </h2>
 
----
 - Open train.sh and ensure that setting is what you want.<br>
 - There are some flag you can use for training
-    - --use_sam 
+    - `--use_sam` 
         - optimizer + SAM
-    - --use_swa 
+    - `--use_swa` 
         - Use SWA
-    - --cood_en 
+    - `--cood_en` 
         - Coordconv
-    - --lr_nosch
+    - `--lr_nosch`
         - Disable learning scheduler
 
 Enter the command
@@ -112,15 +118,14 @@ Enter the command
 
 <h2 id = "Testing"> Testing </h2>
 
----
 - Ensure that backone is the same as training <br>
 - Select the ckpt you want to test <br>
 ![image alt](./pic/2.png) <br>
 
 - There are some flag you can use for testing
-    - --cood_en 
+    - `--cood_en`
         - Coordconv (Only for Coordconv)
-    - --use_shift
+    - `--use_shift`
         - Shift the image along x-axis, y-axis and average the all detections
 
 Enter the command
@@ -131,7 +136,7 @@ Enter the command
 
 <h2 id = "Average"> Average models </h2>
 
----
+
 - In **soup.py**, select the chekpoints you want to use
 ![image alt](./pic/4.png) <br>
 
@@ -145,12 +150,12 @@ python soup.py
 
 <h2 id = "Generate"> Generate solution.txt </h2>
 
----
+
 - Ensure that backone is the same as training <br>
 - Select the ckpt you want to generate solution <br>
 
 - There are some flag you can use for testing
-    - --use_shift
+    - `--use_shift`
         - Shift the image along x-axis, y-axis and average the all detections
 
 **<font color=#FF0000>※ gen_result do not support Coordconv </font>**
@@ -163,7 +168,7 @@ Enter the command
 
 <h2 id = "Inference_one"> Inference and plot one image </h2>
 
----
+
 - Select the ckpt you want to generate solution <br>
 - Specify the image you want to inference <br>
 - Remember giving the file name for result <br>
@@ -180,8 +185,7 @@ Enter the command
 
 <h2 id = "Visualization"> Visualization </h2>
 
----
-Our work supports the visualization from [pytorch/captum](https://github.com/pytorch/captum) and [Captum/GradientShap](https://captum.ai/api/gradient_shap.html).  
+Our work supports the visualization from [pytorch/captum](https://github.com/pytorch/captum).
 There are five modes you can choose,  
 
 0. Default
