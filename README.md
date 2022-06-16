@@ -137,7 +137,7 @@ Enter the command
 
 - In **test.sh**
     - Ensure that backone is the same as training 
-    - Select the ckpt you want to test 
+    - Select the ckpt you want to test <br>
     ![image alt](./pic/2.png)
 
     - There are some flag you can use for testing
