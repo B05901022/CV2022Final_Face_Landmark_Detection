@@ -30,8 +30,8 @@ $ cd CV2022Final_Face_Landmark_Detection
 pip install -r requirements.txt
 ```
 
-**<font color=#FF0000>※ Check torch.version.cuda is same as that from nvidia-smi </font>**
-
+**<font color=#FF0000>※ Check torch.version.cuda is same as that from nvidia-smi </font>** <br>
+If you have any problem, you can refert to [here](https://pytorch.org/get-started/previous-versions/)
 
 ### File directory
 
