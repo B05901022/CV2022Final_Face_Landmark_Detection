@@ -16,8 +16,9 @@
 ### Enviorment
 
 - python 3.7
-
-<br>
+- CUDA 10.1
+  
+**<font color=#FF0000>※ Check CUDA is available before training </font>**
 
 ### Clone this repository
 
@@ -25,13 +26,17 @@
 $ git clone https://github.com/B05901022/CV2022Final_Face_Landmark_Detection.git
 $ cd CV2022Final_Face_Landmark_Detection
 ```
-<br>
 
 ### Install requirements
 ```
 pip install -r requirements.txt
 ```
-<br>
+
+**<font color=#FF0000>※ Check CUDA is available before training </font>**
+```
+import torch
+torch.cuda.is_available()
+```
 
 ### File directory
 
@@ -48,7 +53,6 @@ data/
         └─── annot.pkl
 └─── aflw_test/
 ```
-<br>
 
 ### Wandb
 
@@ -58,8 +62,7 @@ Enter this command in shell
 wandb login
 ```
 In **main.py** change your project and entity
-![image alt](./pic/1.png) <br>
-<br>
+![image alt](./pic/1.png)
 
 <h2 id = "Image_resoultion"> Image resoultion </h2>
 
@@ -67,7 +70,6 @@ In **main.py**, change the image resolution,
 ```
 input_resolution=384 
 ```
-<br>
 
 <h2 id = "setup"> Final setup </h2>
 
@@ -93,7 +95,6 @@ input_resolution=384
     <td style="text-align:center">240</td>
   </tr>
 </table>
-<br>
 
 <h2 id = "Script"> Script </h2>
 
@@ -107,7 +108,6 @@ input_resolution=384
 └─── adapt.sh
 └─── adapt_test.sh
 ```
-<br>
 
 <h2 id = "Training"> Training </h2>
 
@@ -127,7 +127,6 @@ Enter the command
             - Coordconv
         - `--lr_nosch`
             - Disable learning scheduler
-<br>
 
 <h2 id = "Testing"> Testing </h2>
 
@@ -137,16 +136,15 @@ Enter the command
 ```
 
 - In **test.sh**
-    - Ensure that backone is the same as training <br>
-    - Select the ckpt you want to test <br>
-    ![image alt](./pic/2.png) <br>
+    - Ensure that backone is the same as training 
+    - Select the ckpt you want to test 
+    ![image alt](./pic/2.png)
 
     - There are some flag you can use for testing
         - `--cood_en`
             - Coordconv (Only for Coordconv)
         - `--use_shift`
             - Shift the image along x-axis, y-axis and average the all detections
-<br>
 
 <h2 id = "Average"> Average models </h2>
 
@@ -157,11 +155,10 @@ python soup.py
 
 - In **soup.py** 
     - select the chekpoints you want to use
-![image alt](./pic/4.png) <br>
+![image alt](./pic/4.png)
 
     - They should come from smae backbone model
 
-<br>
 
 <h2 id = "Generate"> Generate solution.txt </h2>
 
@@ -171,15 +168,14 @@ Enter the command
 ```
 
 - In **gen_result.sh**
-    - Ensure that backone is the same as training <br>
-    - Select the ckpt you want to generate solution <br>
+    - Ensure that backone is the same as training
+    - Select the ckpt you want to generate solution
 
     - There are some flag you can use for testing
         - `--use_shift`
             - Shift the image along x-axis, y-axis and average the all detections
 
         **<font color=#FF0000>※ gen_result do not support Coordconv </font>**
-<br>
 
 <h2 id = "Inference_one"> Inference and plot one image </h2>
 
@@ -189,15 +185,14 @@ Enter the command
 ```
 
 - In **inference_one.sh**
-    - Select the ckpt you want to generate solution <br>
-    - Specify the image you want to inference <br>
-    - Remember giving the file name for result <br>
+    - Select the ckpt you want to generate solution 
+    - Specify the image you want to inference 
+    - Remember giving the file name for result 
 
-    ![image alt](./pic/3.png) <br>
+    ![image alt](./pic/3.png) 
 
     **<font color=#FF0000>※ Inference_one do not support Coordconv and 25_shift iamges </font>**
 
-<br>
 
 <h2 id = "Visualization"> Visualization </h2>
 
@@ -211,10 +206,10 @@ There are five modes you can choose,
 
 In **gen_visualize.sh**
 
-0. Default
-1. Face Silhouette
-2. Eyes
-3. Nose
-4. Mouth
+1. Default
+2. Face Silhouette
+3. Eyes
+4. Nose
+5. Mouth
 
 **<font color=#FF0000>※ This operation requires a lot of RAM.</font> It is better to use cpu rather than GPU and makce sure that <font color=#FF0000>RAM > 50 GB </font>is available.**
