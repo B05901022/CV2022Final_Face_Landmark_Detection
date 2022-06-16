@@ -62,11 +62,11 @@
 ## Visualization
 Our work supports the visualization from [pytorch/captum](https://github.com/pytorch/captum) and [Captum/GradientShap](https://captum.ai/api/gradient_shap.html).  
 There are five modes you can choose,  
-0. Default
-1. Face Silhouette
-2. Eyes
-3. Nose
-4. Mouth
+##### 0. Default
+##### 1. Face Silhouette
+##### 2. Eyes
+##### 3. Nose
+##### 4. Mouth
 To visualize your model of an image,
 ```
 ./script/gen_visualize.sh
