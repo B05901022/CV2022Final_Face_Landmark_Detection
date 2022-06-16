@@ -6,27 +6,28 @@
 # 2: Eyes (24-points)
 # 3: Nose (18-points)
 # 4: Mouth (40-points)
-detect_target=0
+detect_target=0                                 # set your detect target (0, 1, 2, 3, or 4)
 
 # --- Path Arguments ---
-ckpt_path=./checkpoints/
-test_image_path=../data/aflw_val/image00013.jpg
-save_img_path=../CV_visualize/
+ckpt_path=./checkpoints/                        # checkpoints path
+test_image_path=../data/aflw_val/image00013.jpg # fetch image path (one image that you want to visualize)
+save_img_path=../CV_visualize/                  # save image path (path that you want to save result image)
 
 # --- Logging Arguments ---
-exp_name=Exp_27_mbv2_L1_fullres_60ep_nosch_vis                     # Name for wand running
-ckpt_name=Exp_27_mbnetv2_L1_rand_fullres_60ep_nosch_epoch=59-val_loss=0.0253.ckpt              # name of check point (Used when testing)
+exp_name=Exp_27_mbv2_L1_fullres_60ep_nosch_vis                                           # Name for wand running
+ckpt_name=Exp_27_mbnetv2_L1_rand_fullres_60ep_nosch_epoch=59-val_loss=0.0253.ckpt        # name of check point (Used when testing)
 
 # --- GPU/CPU Arguments ---
-gpu="0"                               # Which gpu you want to use
+gpu="0"                                         # Which gpu you want to use
 
 # --- Available Flags ---
 # ----use_shift # use 25 shifted images
 
-mkdir -p $save_img_path
+mkdir -p $save_img_path                         # create save image folder
 
-wandb login
+wandb login                                     # wandb
 
+# run main.py
 python main.py \
   --visualize \
   --test_image_path $test_image_path \
