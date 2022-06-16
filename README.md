@@ -66,7 +66,6 @@ input_resolution=384
 ```
 
 <h2 id = "setup"> Final setup </h2>
-
 <table>
   <tr style=" border-top: 1px solid white;">
     <th style="text-align:center">Backbone</th>
