@@ -162,6 +162,7 @@ Enter the command
     - Select the checkpoint you want to generate solution
     - There are some flag you can use for testing
         - `--use_shift`
+
     **<font color=#FF0000>※ gen_result does not support Coordconv </font>**
 
 <h2 id = "Inference_one"> Inference and plot one image </h2>
@@ -175,7 +176,8 @@ Enter the command
     - Specify the image you want to inference 
     - Remember giving the file name for result<br> 
     ![image alt](./pic/3.png)
-    - **<font color=#FF0000>※ Inference_one does not support Coordconv and 25_shift iamges </font>**
+    
+    **<font color=#FF0000>※ Inference_one does not support Coordconv and 25_shift iamges </font>**
 
 
 <h2 id = "Visualization"> Visualization </h2>
