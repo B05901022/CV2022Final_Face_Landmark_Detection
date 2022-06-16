@@ -13,16 +13,10 @@
 
 <h2 id = "Preparing"> Preparing </h2>
 
-### Wandb
+### Enviorment
 
-Login your wandb.
+- python 3.7
 
-Enter this command in shell
-```
-wandb login
-```
-In **main.py** change your project and entity
-![image alt](./pic/1.png) <br>
 <br>
 
 ### Clone this repository
@@ -30,6 +24,12 @@ In **main.py** change your project and entity
 ```
 $ git clone https://github.com/B05901022/CV2022Final_Face_Landmark_Detection.git
 $ cd CV2022Final_Face_Landmark_Detection
+```
+<br>
+
+### Install requirements
+```
+pip install -r requirements.txt
 ```
 <br>
 
@@ -48,6 +48,17 @@ data/
         └─── annot.pkl
 └─── aflw_test/
 ```
+<br>
+
+### Wandb
+
+Login your wandb.
+Enter this command in shell
+```
+wandb login
+```
+In **main.py** change your project and entity
+![image alt](./pic/1.png) <br>
 <br>
 
 <h2 id = "Image_resoultion"> Image resoultion </h2>
