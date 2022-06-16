@@ -58,7 +58,6 @@ wandb login
 ```
 In **main.py** change your project and entity
 ![image alt](./pic/1.png)
-
 <h2 id = "Image_resoultion"> Image resoultion </h2>
 
 To change the image resolution for faster training, please modify main.py as follows:
@@ -148,9 +147,8 @@ python soup.py
 ```
 
 - In **soup.py** 
-    - Add the checkpoints to be averaged in MODEL_checkpointS list
-![image alt](./pic/4.png)
-
+    - Add the checkpoints to be averaged in MODEL_checkpointS list<br>
+    ![image alt](./pic/4.png)
     - Ensure all selected come from smae backbone model
 
 
@@ -165,8 +163,7 @@ Enter the command
     - Select the checkpoint you want to generate solution
     - There are some flag you can use for testing
         - `--use_shift`
-
-        **<font color=#FF0000>※ gen_result does not support Coordconv </font>**
+        - **<font color=#FF0000>※ gen_result does not support Coordconv </font>**
 
 <h2 id = "Inference_one"> Inference and plot one image </h2>
 
@@ -177,10 +174,9 @@ Enter the command
 - In **inference_one.sh**
     - Select the checkpoint you want to generate solution 
     - Specify the image you want to inference 
-    - Remember giving the file name for result 
-
+    - Remember giving the file name for result<br> 
     ![image alt](./pic/3.png)
-    **<font color=#FF0000>※ Inference_one does not support Coordconv and 25_shift iamges </font>**
+    - **<font color=#FF0000>※ Inference_one does not support Coordconv and 25_shift iamges </font>**
 
 
 <h2 id = "Visualization"> Visualization </h2>
