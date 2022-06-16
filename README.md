@@ -31,6 +31,7 @@ In **main.py** change your project and entity
 $ git clone https://github.com/B05901022/CV2022Final_Face_Landmark_Detection.git
 $ cd CV2022Final_Face_Landmark_Detection
 ```
+<br>
 
 ### File directory
 
@@ -99,104 +100,109 @@ input_resolution=384
 
 <h2 id = "Training"> Training </h2>
 
-- Open train.sh and ensure that setting is what you want.<br>
-- There are some flag you can use for training
-    - `--use_sam` 
-        - optimizer + SAM
-    - `--use_swa` 
-        - Use SWA
-    - `--cood_en` 
-        - Coordconv
-    - `--lr_nosch`
-        - Disable learning scheduler
-
 Enter the command
 ```
 ./script/train.sh
 ```
+
+- In **train.sh**
+    - Ensure that setting is what you want
+    - There are some flag you can use for training
+        - `--use_sam` 
+            - optimizer + SAM
+        - `--use_swa` 
+            - Use SWA
+        - `--cood_en` 
+            - Coordconv
+        - `--lr_nosch`
+            - Disable learning scheduler
 <br>
 
 <h2 id = "Testing"> Testing </h2>
-
-- Ensure that backone is the same as training <br>
-- Select the ckpt you want to test <br>
-![image alt](./pic/2.png) <br>
-
-- There are some flag you can use for testing
-    - `--cood_en`
-        - Coordconv (Only for Coordconv)
-    - `--use_shift`
-        - Shift the image along x-axis, y-axis and average the all detections
 
 Enter the command
 ```
 ./script/test.sh
 ```
+
+- In **test.sh**
+    - Ensure that backone is the same as training <br>
+    - Select the ckpt you want to test <br>
+    ![image alt](./pic/2.png) <br>
+
+    - There are some flag you can use for testing
+        - `--cood_en`
+            - Coordconv (Only for Coordconv)
+        - `--use_shift`
+            - Shift the image along x-axis, y-axis and average the all detections
 <br>
 
 <h2 id = "Average"> Average models </h2>
-
-
-- In **soup.py**, select the chekpoints you want to use
-![image alt](./pic/4.png) <br>
-
-- They should come from smae backbone model
 
 Enter the command
 ```
 python soup.py
 ```
+
+- In **soup.py** 
+    - select the chekpoints you want to use
+![image alt](./pic/4.png) <br>
+
+    - They should come from smae backbone model
+
 <br>
 
 <h2 id = "Generate"> Generate solution.txt </h2>
-
-
-- Ensure that backone is the same as training <br>
-- Select the ckpt you want to generate solution <br>
-
-- There are some flag you can use for testing
-    - `--use_shift`
-        - Shift the image along x-axis, y-axis and average the all detections
-
-**<font color=#FF0000>※ gen_result do not support Coordconv </font>**
 
 Enter the command
 ```
 ./script/gen_result.sh
 ```
+
+- In **gen_result.sh**
+    - Ensure that backone is the same as training <br>
+    - Select the ckpt you want to generate solution <br>
+
+    - There are some flag you can use for testing
+        - `--use_shift`
+            - Shift the image along x-axis, y-axis and average the all detections
+
+        **<font color=#FF0000>※ gen_result do not support Coordconv </font>**
 <br>
 
 <h2 id = "Inference_one"> Inference and plot one image </h2>
-
-
-- Select the ckpt you want to generate solution <br>
-- Specify the image you want to inference <br>
-- Remember giving the file name for result <br>
-
-![image alt](./pic/3.png) <br>
-
-**<font color=#FF0000>※ Inference_one do not support Coordconv and 25_shift iamges </font>**
 
 Enter the command
 ```
 ./script/inference_one.sh
 ```
+
+- In **inference_one.sh**
+    - Select the ckpt you want to generate solution <br>
+    - Specify the image you want to inference <br>
+    - Remember giving the file name for result <br>
+
+    ![image alt](./pic/3.png) <br>
+
+    **<font color=#FF0000>※ Inference_one do not support Coordconv and 25_shift iamges </font>**
+
 <br>
 
 <h2 id = "Visualization"> Visualization </h2>
-
-Our work supports the visualization from [pytorch/captum](https://github.com/pytorch/captum).
-There are five modes you can choose,  
-
-0. Default
-1. Face Silhouette
-2. Eyes
-3. Nose
-4. Mouth
-
-**<font color=#FF0000>※ This operation requires a lot of RAM.</font> It is better to use cpu rather than GPU and makce sure that <font color=#FF0000>RAM > 50 GB </font>is available.**
 
 To visualize your model of an image,
 ```
 ./script/gen_visualize.sh
 ```
+
+Our work supports the visualization from [pytorch/captum](https://github.com/pytorch/captum).
+There are five modes you can choose,  
+
+- In **gen_visualize.sh**
+    0. Default
+    1. Face Silhouette
+    2. Eyes
+    3. Nose
+    4. Mouth
+
+**<font color=#FF0000>※ This operation requires a lot of RAM.</font> It is better to use cpu rather than GPU and makce sure that <font color=#FF0000>RAM > 50 GB </font>is available.**
